@@ -14,6 +14,7 @@ namespace WS980
 {
     public partial class Form1 : Form
     {
+        WS980 ws980 = null;
         public Form1()
         {
             InitializeComponent();
@@ -21,25 +22,26 @@ namespace WS980
 
         private void button1_Click(object sender, EventArgs e)
         {
-            GetComParameter();
+            SortedList<int, string>  list = ws980.getData();
+            foreach (var item in list)
+            {
+                tBOut.AppendText(String.Format("{0}: {1}\n\r\n", item.Key, item.Value));
+            }
         }
 
-        private void GetComParameter()
+        private void Form1_Load(object sender, EventArgs e)
         {
-            var sendClient = new UdpClient("192.168.22.255",46000);
-            sendClient.Send(new byte[] { 0xff, 0xff, 0x12, 0x00, 0x04, 0x16 }, 6);
-            IPEndPoint lep = (IPEndPoint)sendClient.Client.LocalEndPoint;
-            sendClient.Close();
-
-
-            var receiveClient = new UdpClient(lep.Port);
-            IPEndPoint RemoteIpEndPoint = lep ;// new IPEndPoint(IPAddress.Any, 0);
-
-            //// Blocks until a message returns on this socket from a remote host.
-            Byte[] receiveBytes = receiveClient.Receive(ref RemoteIpEndPoint);
-            String outstr = BitConverter.ToString(receiveBytes);
-            tBOut.AppendText(outstr + Environment.NewLine);
-
+            var WS980List = WS980.RequestAllStations();
+            foreach (var item in WS980List)
+            {
+                tBOut.AppendText(item.ToString() + Environment.NewLine);
+            }
+            if (WS980List.Count < 1)
+            {
+                tBOut.AppendText("keine Wetterstation gefunden" + Environment.NewLine);
+                return;
+            }
+            ws980 = new WS980(WS980List[0]);
         }
     }
 }
