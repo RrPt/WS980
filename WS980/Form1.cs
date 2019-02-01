@@ -25,7 +25,7 @@ namespace WS980
             SortedList<int, string>  list = ws980.getData();
             foreach (var item in list)
             {
-                tBOut.AppendText(String.Format("{0}: {1}\n\r\n", item.Key, item.Value));
+                tBOut.AppendText(String.Format("{0:x}: {1}\n\r\n", item.Key, item.Value));
             }
         }
 
