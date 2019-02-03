@@ -34,27 +34,27 @@ namespace WS980
             this.connectionData = connectionData;
 
             dataSetDef1 = new WS980DataSetDef();
-            dataSetDef1.DataItemList.Add(1, new WS980DataItemDef(2, "TempIn", "°C"));
-            dataSetDef1.DataItemList.Add(2, new WS980DataItemDef(2, "TempOut", "°C"));
-            dataSetDef1.DataItemList.Add(3, new WS980DataItemDef(2, "TempTau", "°C"));
-            dataSetDef1.DataItemList.Add(4, new WS980DataItemDef(2, "TempX", "°C"));
-            dataSetDef1.DataItemList.Add(5, new WS980DataItemDef(2, "TempHitzeIdx", "°C"));
+            dataSetDef1.DataItemList.Add(1, new WS980DataItemDef(2, "TempIn", "°C",1));
+            dataSetDef1.DataItemList.Add(2, new WS980DataItemDef(2, "TempOut", "°C",1));
+            dataSetDef1.DataItemList.Add(3, new WS980DataItemDef(2, "TempTau", "°C",1));
+            dataSetDef1.DataItemList.Add(4, new WS980DataItemDef(2, "TempX", "°C",1));
+            dataSetDef1.DataItemList.Add(5, new WS980DataItemDef(2, "TempHitzeIdx", "°C",1));
 
             dataSetDef1.DataItemList.Add(6, new WS980DataItemDef(1, "FeuchteIn", "%"));
             dataSetDef1.DataItemList.Add(7, new WS980DataItemDef(1, "FeuchteOut", "%"));
-            dataSetDef1.DataItemList.Add(8, new WS980DataItemDef(2, "Val8", "?"));
-            dataSetDef1.DataItemList.Add(9, new WS980DataItemDef(2, "Val9", "?"));
-            dataSetDef1.DataItemList.Add(10, new WS980DataItemDef(2, "Val10", "?"));
-            dataSetDef1.DataItemList.Add(11, new WS980DataItemDef(2, "Val11", "?"));
-            dataSetDef1.DataItemList.Add(12, new WS980DataItemDef(2, "Val12", "?"));
-            dataSetDef1.DataItemList.Add(14, new WS980DataItemDef(4, "Val14", "?"));
-            dataSetDef1.DataItemList.Add(16, new WS980DataItemDef(4, "Val16", "?"));
-            dataSetDef1.DataItemList.Add(17, new WS980DataItemDef(4, "Val17", "?"));
-            dataSetDef1.DataItemList.Add(18, new WS980DataItemDef(4, "Val18", "?"));
-            dataSetDef1.DataItemList.Add(19, new WS980DataItemDef(4, "Val19", "?"));
-            dataSetDef1.DataItemList.Add(20, new WS980DataItemDef(4, "Val20", "?"));
-            dataSetDef1.DataItemList.Add(21, new WS980DataItemDef(4, "Val21", "?"));
-            dataSetDef1.DataItemList.Add(22, new WS980DataItemDef(4, "Val22", "Pa"));
+            dataSetDef1.DataItemList.Add(8, new WS980DataItemDef(2, "Druck1", "hPa"));
+            dataSetDef1.DataItemList.Add(9, new WS980DataItemDef(2, "Druck2", "hPa"));
+            dataSetDef1.DataItemList.Add(10, new WS980DataItemDef(2, "Windrichtung", "°"));
+            dataSetDef1.DataItemList.Add(11, new WS980DataItemDef(2, "Windgeschw", "m/s"));
+            dataSetDef1.DataItemList.Add(12, new WS980DataItemDef(2, "WindBö", "m/s"));
+            dataSetDef1.DataItemList.Add(14, new WS980DataItemDef(4, "Regen/h", "mm",1));
+            dataSetDef1.DataItemList.Add(16, new WS980DataItemDef(4, "Regen/d", "mm", 1));
+            dataSetDef1.DataItemList.Add(17, new WS980DataItemDef(4, "Regen/w", "mm", 1));
+            dataSetDef1.DataItemList.Add(18, new WS980DataItemDef(4, "Regen/M", "mm", 1));
+            dataSetDef1.DataItemList.Add(19, new WS980DataItemDef(4, "Regen/J", "mm", 1));
+            dataSetDef1.DataItemList.Add(20, new WS980DataItemDef(4, "Regen/T", "mm", 1));
+            dataSetDef1.DataItemList.Add(21, new WS980DataItemDef(4, "Licht", "lux", 1));
+            dataSetDef1.DataItemList.Add(22, new WS980DataItemDef(4, "Val22", ""));
 
 
         }
@@ -128,8 +128,8 @@ namespace WS980
 
         internal SortedList<int, string> getData()
         {
-            byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x04, 0x04, 0x19 };    // Aktuell
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x05, 0x05, 0x1b };  // MAX
+            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x04, 0x04, 0x19 };    // Aktuell
+            byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x05, 0x05, 0x1b };  // MAX
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x06, 0x06, 0x1d };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x07, 0x07, 0x1f };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x08, 0x08, 0x21 };  // 
@@ -216,18 +216,22 @@ namespace WS980
         {
             string erg="?";
             int dataIdx = receiveBytes[idx++];
-            if (dataIdx != dataItemDef.Key) Console.WriteLine("falsche Datenlänge");
+            if (dataIdx != dataItemDef.Key)
+            {
+                Console.WriteLine("falsche Datenlänge");
+                return "Err";
+            }
             if (dataItemDef.Value.Length==2)
             {
-                float val =( 256 * (int)receiveBytes[idx ] + receiveBytes[idx + 1])/10.0f;
-                erg = String.Format("\n\r{0}={1}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
+                float val =( 256 * (int)receiveBytes[idx ] + receiveBytes[idx + 1])* dataItemDef.Value.Scale;
+                erg = String.Format("\n\r{0,-15}={1,8:0.0}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
                 Console.WriteLine("\n\r{0}={1}{2}",dataItemDef.Value.Name,val ,dataItemDef.Value.Unit);
                 idx += 2;
             }
             else if (dataItemDef.Value.Length == 1)
             {
-                float val =  receiveBytes[idx ];
-                erg = String.Format("\n\r{0}={1}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
+                float val =  receiveBytes[idx ] * dataItemDef.Value.Scale;
+                erg = String.Format("\n\r{0,-15}={1,8:0.0}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
                 Console.WriteLine("\n\r{0}={1}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
                 idx += 1;
             }
@@ -238,7 +242,8 @@ namespace WS980
                 {
                     val = val * 256 + receiveBytes[idx+i];
                 }
-                erg = String.Format("\n\r{0}={1}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
+                val = val * dataItemDef.Value.Scale;
+                erg = String.Format("\n\r{0,-15}={1,8:0.0}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
                 Console.WriteLine("\n\r{0}={1}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
                 idx += 4;
             }
