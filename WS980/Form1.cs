@@ -25,13 +25,11 @@ namespace WS980
         private void button1_Click(object sender, EventArgs e)
         {
             dataList = ws980.getData();
-            foreach (var item in dataList)
+            foreach (var sensor in      WS980Sensor.dataItemList.Values)
             {
-                if (item.Key > 99) continue;
-                int SensId = item.Key;
-                tBOut.AppendText(String.Format("{0,3}: {1}  <{2} , {3}>\r\n", item.Key, getVal(SensId), getVal(SensId+600), getVal(SensId+500)));
+                tBOut.AppendText(sensor.ToString()+Environment.NewLine);
             }
-
+            tBOut.AppendText("---------------------------" + Environment.NewLine);
         }
 
         private object getVal(int sensId)
