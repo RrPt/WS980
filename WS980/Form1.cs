@@ -15,6 +15,8 @@ namespace WS980
     public partial class Form1 : Form
     {
         WS980 ws980 = null;
+        SortedList<int, string> dataList;
+
         public Form1()
         {
             InitializeComponent();
@@ -22,11 +24,20 @@ namespace WS980
 
         private void button1_Click(object sender, EventArgs e)
         {
-            SortedList<int, string>  list = ws980.getData();
-            foreach (var item in list)
+            dataList = ws980.getData();
+            foreach (var item in dataList)
             {
-                tBOut.AppendText(String.Format("{0,2:X}: {1}\r\n", item.Key, item.Value));
+                if (item.Key > 99) continue;
+                int SensId = item.Key;
+                tBOut.AppendText(String.Format("{0,3}: {1}  <{2} , {3}>\r\n", item.Key, getVal(SensId), getVal(SensId+600), getVal(SensId+500)));
             }
+
+        }
+
+        private object getVal(int sensId)
+        {
+            if (dataList.ContainsKey(sensId)) return dataList[sensId];
+            return "";
         }
 
         private void Form1_Load(object sender, EventArgs e)

@@ -42,11 +42,11 @@ namespace WS980
 
             dataSetDef1.DataItemList.Add(6, new WS980DataItemDef(1, "FeuchteIn", "%"));
             dataSetDef1.DataItemList.Add(7, new WS980DataItemDef(1, "FeuchteOut", "%"));
-            dataSetDef1.DataItemList.Add(8, new WS980DataItemDef(2, "Druck1", "hPa"));
-            dataSetDef1.DataItemList.Add(9, new WS980DataItemDef(2, "Druck2", "hPa"));
-            dataSetDef1.DataItemList.Add(10, new WS980DataItemDef(2, "Windrichtung", "°"));
-            dataSetDef1.DataItemList.Add(11, new WS980DataItemDef(2, "Windgeschw", "m/s"));
-            dataSetDef1.DataItemList.Add(12, new WS980DataItemDef(2, "WindBö", "m/s"));
+            dataSetDef1.DataItemList.Add(8, new WS980DataItemDef(2, "Druck1", "hPa",1));
+            dataSetDef1.DataItemList.Add(9, new WS980DataItemDef(2, "Druck2", "hPa", 1));
+            dataSetDef1.DataItemList.Add(10, new WS980DataItemDef(2, "Windrichtung", "°", 0));
+            dataSetDef1.DataItemList.Add(11, new WS980DataItemDef(2, "Windgeschw", "m/s", 1));
+            dataSetDef1.DataItemList.Add(12, new WS980DataItemDef(2, "WindBö", "m/s", 1));
             dataSetDef1.DataItemList.Add(14, new WS980DataItemDef(4, "Regen/h", "mm",1));
             dataSetDef1.DataItemList.Add(16, new WS980DataItemDef(4, "Regen/d", "mm", 1));
             dataSetDef1.DataItemList.Add(17, new WS980DataItemDef(4, "Regen/w", "mm", 1));
@@ -128,30 +128,25 @@ namespace WS980
 
         internal SortedList<int, string> getData()
         {
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x04, 0x04, 0x19 };    // Aktuell
-            byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x05, 0x05, 0x1b };  // MAX
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x06, 0x06, 0x1d };  // 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x07, 0x07, 0x1f };  // 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x08, 0x08, 0x21 };  // 
+            byte[] befActValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x04, 0x04, 0x19 };   // Aktuell
+            byte[] befMaxValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x05, 0x05, 0x1b };   // MAX
+            byte[] befMinValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x06, 0x06, 0x1d };     // Min
+            byte[] bef7 = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x07, 0x07, 0x1f };  // 
+            byte[] bef8 = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x08, 0x08, 0x21 };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x00, 0x80, 0x82, 0x18 };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x00, 0x80, 0x02, 0x18 };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x01, 0x80, 0x83, 0x1a };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x01, 0x80, 0x03, 0x1a };  // 
 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x02, 0x80, 0x84, 0x1c };  // 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x02, 0x80, 0x04, 0x1c };  // 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x03, 0x80, 0x85, 0x1e };  // 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x03, 0x80, 0x05, 0x1e };  // 
-
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x04, 0x80, 0x86, 0x20 };  // 
-            // .....
-
-
             //todo hier gehts weiter
-            byte[] erg = getData(bef);
-            SortedList<int, string> valueList = getValues(erg,dataSetDef1);
+            SortedList<int, string> valuesList = new SortedList<int, string>();
+            getValues(getData(befActValues), dataSetDef1,0, valuesList);
+            getValues(getData(befMaxValues), dataSetDef1,500, valuesList);
+            getValues(getData(befMinValues), dataSetDef1, 600, valuesList);
+            //getValues(getData(bef7), dataSetDef1, 700, valuesList);
+            //getValues(getData(bef8), dataSetDef1, 800, valuesList);
 
-            return valueList;
+            return valuesList;
         }
 
 
@@ -188,66 +183,72 @@ namespace WS980
         }
 
 
-        private SortedList<int, string> getValues(byte[] receiveBytes, WS980DataSetDef dataSetDef)
+        private SortedList<int, string> getValues(byte[] receiveBytes, WS980DataSetDef dataSetDef, int idxOffset, SortedList<int, string> valuesList)
         {
-            SortedList<int, string> list = new SortedList<int, string>();
-
-            if (receiveBytes[0] != 0xFF) return list;
-            if (receiveBytes[1] != 0xFF) return list;
-            if (receiveBytes[2] != 0x0b) return list;   // todo evtl. mit dem Befehl[2] vergleichen
+            if (receiveBytes[0] != 0xFF) return valuesList;
+            if (receiveBytes[1] != 0xFF) return valuesList;
+            if (receiveBytes[2] != 0x0b) return valuesList;   // todo evtl. mit dem Befehl[2] vergleichen
             int len = 256 * (int)receiveBytes[3] + receiveBytes[4];
             int para = receiveBytes[5];
-            list.Add(0, BitConverter.ToString(receiveBytes));
+            valuesList.Add(0+ idxOffset, BitConverter.ToString(receiveBytes));
             int idx = 6;
 
-            //while (idx< receiveBytes.Length-2)
-            foreach (var dataItemDef in dataSetDef1.DataItemList)
+            while (idx< receiveBytes.Length-2)
+            //foreach (var dataItemDef in dataSetDef1.DataItemList)
             {
-                string erg = getDataItem(ref idx,receiveBytes,dataItemDef );
-                if (!list.ContainsKey(dataItemDef.Key))  list.Add(dataItemDef.Key, erg);
+                string erg = getNextDataItem(ref idx,receiveBytes,valuesList, idxOffset);
+                //if (!list.ContainsKey(dataItemDef.Key))  list.Add(dataItemDef.Key, erg);
             }
 
 
 
-            return list;
+            return valuesList;
         }
 
-        private string getDataItem(ref int idx, byte[] receiveBytes, KeyValuePair<int, WS980DataItemDef> dataItemDef)
+        private string getNextDataItem(ref int idx, byte[] receiveBytes, SortedList<int, string> list, int idxOffset)
         {
             string erg="?";
             int dataIdx = receiveBytes[idx++];
-            if (dataIdx != dataItemDef.Key)
+            if (!dataSetDef1.DataItemList.ContainsKey(dataIdx))
             {
-                Console.WriteLine("falsche Datenlänge");
+                Console.WriteLine("SensorNo {0} nicht definiert", dataIdx);
                 return "Err";
             }
-            if (dataItemDef.Value.Length==2)
+            var itemDef = dataSetDef1.DataItemList[dataIdx];
+            if (itemDef.Length==2)
             {
-                float val =( 256 * (int)receiveBytes[idx ] + receiveBytes[idx + 1])* dataItemDef.Value.Scale;
-                erg = String.Format("\n\r{0,-15}={1,8:0.0}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
-                Console.WriteLine("\n\r{0}={1}{2}",dataItemDef.Value.Name,val ,dataItemDef.Value.Unit);
+                float val =( 256 * (int)receiveBytes[idx ] + receiveBytes[idx + 1])* itemDef.Scale;
+                erg = String.Format("\n\r{0,-15}={1,8:0.0}{2}", itemDef.Name, val, itemDef.Unit);
+                Console.WriteLine("{0}={1}{2}", itemDef.Name,val , itemDef.Unit);
                 idx += 2;
             }
-            else if (dataItemDef.Value.Length == 1)
+            else if (itemDef.Length == 1)
             {
-                float val =  receiveBytes[idx ] * dataItemDef.Value.Scale;
-                erg = String.Format("\n\r{0,-15}={1,8:0.0}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
-                Console.WriteLine("\n\r{0}={1}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
+                float val =  receiveBytes[idx ] * itemDef.Scale;
+                erg = String.Format("\n\r{0,-15}={1,8:0.0}{2}", itemDef.Name, val, itemDef.Unit);
+                Console.WriteLine("{0}={1}{2}", itemDef.Name, val, itemDef.Unit);
                 idx += 1;
             }
-            else if (dataItemDef.Value.Length == 4)
+            else if (itemDef.Length == 4)
             {
                 float val = 0;
                 for (int i = 0; i < 4; i++)
                 {
                     val = val * 256 + receiveBytes[idx+i];
                 }
-                val = val * dataItemDef.Value.Scale;
-                erg = String.Format("\n\r{0,-15}={1,8:0.0}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
-                Console.WriteLine("\n\r{0}={1}{2}", dataItemDef.Value.Name, val, dataItemDef.Value.Unit);
+                val = val * itemDef.Scale;
+                erg = String.Format("\n\r{0,-15}={1,8:0.0}{2}", itemDef.Name, val, itemDef.Unit);
+                Console.WriteLine("{0}={1}{2}", itemDef.Name, val, itemDef.Unit);
                 idx += 4;
             }
-
+            if (list.ContainsKey(dataIdx + idxOffset))
+            {
+                list[dataIdx + idxOffset] += "; " + erg;
+            }
+            else
+            {
+                list.Add(dataIdx + idxOffset, erg);
+            }
             return erg;
         }
     }
