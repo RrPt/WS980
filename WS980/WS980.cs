@@ -12,7 +12,7 @@ namespace WS980
 {
     enum ValueType
     {
-        actual, min, max
+        actual, min, max, version
     }
 
     class ConnectionData
@@ -32,7 +32,9 @@ namespace WS980
     class WS980
     {
         private ConnectionData connectionData;
-        //WS980DataSetDef dataSetDef1;
+        private string version = "V?";
+        // List of  Sensors
+        private SortedList<int, WS980Sensor> sensorList = new SortedList<int, WS980Sensor>();
 
         public WS980(ConnectionData connectionData)
         {
@@ -46,8 +48,8 @@ namespace WS980
 
             new WS980DataItemDef(6,1, "FeuchteIn", "%");
             new WS980DataItemDef(7,1, "FeuchteOut", "%");
-            new WS980DataItemDef(8,2, "Druck1", "hPa",1);
-            new WS980DataItemDef(9,2, "Druck2", "hPa", 1);
+            new WS980DataItemDef(8,2, "DruckAbs", "hPa",1);
+            new WS980DataItemDef(9,2, "DruckRel", "hPa", 1);
             new WS980DataItemDef(10,2, "Windrichtung", "°", 0);
             new WS980DataItemDef(11,2, "Windgeschw", "m/s", 1);
             new WS980DataItemDef(12,2, "WindBö", "m/s", 1);
@@ -58,12 +60,15 @@ namespace WS980
             new WS980DataItemDef(19,4, "Regen/J", "mm", 1);
             new WS980DataItemDef(20,4, "Regen/T", "mm", 1);
             new WS980DataItemDef(21,4, "Licht", "lux", 2);
-            new WS980DataItemDef(22,4, "Val22", "");
+            new WS980DataItemDef(22,2, "Val22", "");
+            new WS980DataItemDef(23,2, "Val23", "");
 
 
         }
 
         internal ConnectionData ConnectionData { get => connectionData; set => connectionData = value; }
+        public string Version { get => version; set => version = value; }
+        internal SortedList<int, WS980Sensor> SensorList { get => sensorList; set => sensorList = value; }
 
         #region get Connection Infos (static)
         static UdpClient receiveClient;
@@ -130,8 +135,9 @@ namespace WS980
         }
         #endregion
 
-        internal SortedList<int, string> getData()
+        internal void getData()
         {
+            byte[] befVersion =   { 0xff, 0xff, 0x50, 0x03, 0x53 };  // 
             byte[] befActValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x04, 0x04, 0x19 };   // Aktuell
             byte[] befMaxValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x05, 0x05, 0x1b };   // MAX
             byte[] befMinValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x06, 0x06, 0x1d };     // Min
@@ -142,15 +148,12 @@ namespace WS980
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x01, 0x80, 0x83, 0x1a };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x01, 0x80, 0x03, 0x1a };  // 
 
-            //todo hier gehts weiter
-            SortedList<int, string> valuesList = new SortedList<int, string>();
+            getValues(getData(befVersion), ValueType.version);
             getValues(getData(befActValues), ValueType.actual);
             getValues(getData(befMaxValues), ValueType.max);
             getValues(getData(befMinValues), ValueType.min);
-            //getValues(getData(bef7), dataSetDef1, 700, valuesList);
-            //getValues(getData(bef8), dataSetDef1, 800, valuesList);
 
-            return valuesList;
+            return ;
         }
 
 
@@ -189,37 +192,58 @@ namespace WS980
 
         private void getValues(byte[] receiveBytes, ValueType valueType)
         {
+            Console.WriteLine("{0}: {1} {2}\n", valueType, BitConverter.ToString(receiveBytes), Encoding.ASCII.GetString(receiveBytes));
             if (receiveBytes[0] != 0xFF) return ;
             if (receiveBytes[1] != 0xFF) return ;
-            if (receiveBytes[2] != 0x0b) return ;   // todo evtl. mit dem Befehl[2] vergleichen
-            int len = 256 * (int)receiveBytes[3] + receiveBytes[4];
-            int para = receiveBytes[5];
-            Console.WriteLine("{0}: {1}\n", valueType, BitConverter.ToString(receiveBytes));
-            int idx = 6;
-
-            while (idx< receiveBytes.Length-2)
+            if (valueType == ValueType.version)
             {
-                string erg = getNextDataItem(ref idx,receiveBytes, valueType);
+                if (receiveBytes[2] != 0x50) return;
+                int len =  (int)receiveBytes[3];
+                version = Encoding.ASCII.GetString(receiveBytes.Skip(5).ToArray());
+            }
+            else
+            {
+                if (receiveBytes[2] != 0x0b) return;
+                // todo evtl. mit dem Befehl[2] vergleichen
+                int len = 256 * (int)receiveBytes[3] + receiveBytes[4];
+                int para = receiveBytes[5];
+                int idx = 6;
+
+                while (idx < receiveBytes.Length - 2)
+                {
+                    idx = getNextDataItem(idx, receiveBytes, valueType);
+                }
             }
         }
 
-        private string getNextDataItem(ref int idx, byte[] receiveBytes, ValueType valueType)
+        private int getNextDataItem(int idx, byte[] receiveBytes, ValueType valueType)
         {
-            string erg="?";
-            int dataIdx = receiveBytes[idx];
+            int dataIdx = receiveBytes[idx++];
             if (!WS980DataItemDef.dataItemList.ContainsKey(dataIdx))
             {
                 Console.WriteLine("SensorNo {0} nicht definiert", dataIdx);
-                return "Err";
+                return -1;
             }
+           
+            WS980Sensor sensor = GetSensor(dataIdx);    // sensor finden oder neu anlegen
+
+            sensor?.UpdateValue(receiveBytes.Skip(idx).Take(sensor.ItemDef.Length), valueType);
+            idx += sensor.ItemDef.Length;
+
+            return idx;
+        }
+
+        private WS980Sensor GetSensor(int dataIdx)
+        {
+            if (!WS980DataItemDef.dataItemList.ContainsKey(dataIdx)) return null ;
             var itemDef = WS980DataItemDef.dataItemList[dataIdx];
-            WS980Sensor sensor = WS980Sensor.GetSensor(itemDef);    // sensor finden oder neu anlegen
 
-            sensor.GetValue(ref idx, receiveBytes, valueType);
+            if (sensorList.ContainsKey(dataIdx)) return sensorList[dataIdx];    // existiert
+            // neu anlegen
 
-
-
-            return sensor.ToString();
+            var sensor = new WS980Sensor(itemDef);
+            sensorList.Add(dataIdx, sensor);
+            return sensor;
         }
     }
 }

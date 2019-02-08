@@ -15,7 +15,7 @@ namespace WS980
     public partial class Form1 : Form
     {
         WS980 ws980 = null;
-        SortedList<int, string> dataList;
+        //SortedList<int, string> dataList;
 
         public Form1()
         {
@@ -24,19 +24,21 @@ namespace WS980
 
         private void button1_Click(object sender, EventArgs e)
         {
-            dataList = ws980.getData();
-            foreach (var sensor in      WS980Sensor.dataItemList.Values)
+            //dataList = 
+            ws980.getData();
+            tBOut.AppendText(ws980.Version + Environment.NewLine);
+            foreach (var sensor in    ws980.SensorList.Values)
             {
                 tBOut.AppendText(sensor.ToString()+Environment.NewLine);
             }
             tBOut.AppendText("---------------------------" + Environment.NewLine);
         }
 
-        private object getVal(int sensId)
-        {
-            if (dataList.ContainsKey(sensId)) return dataList[sensId];
-            return "";
-        }
+        //private object getVal(int sensId)
+        //{
+        //    if (dataList.ContainsKey(sensId)) return dataList[sensId];
+        //    return "";
+        //}
 
         private void Form1_Load(object sender, EventArgs e)
         {

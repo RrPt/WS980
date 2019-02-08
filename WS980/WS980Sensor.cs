@@ -8,9 +8,6 @@ namespace WS980
 {
     class WS980Sensor
     {
-        // List of all Sensors
-        public static SortedList<int, WS980Sensor> dataItemList = new SortedList<int, WS980Sensor>();
-
         const double noValue = -999.9;
         private double actualValue = noValue;
         private double maxValue = noValue;
@@ -27,7 +24,6 @@ namespace WS980
             name = itemDef.Name;
             unit = itemDef.Unit;
             scale = itemDef.Scale;
-            dataItemList.Add(itemDef.Index, this);
         }
 
         public double ActualValue { get => actualValue; set => actualValue = value; }
@@ -42,36 +38,22 @@ namespace WS980
         public double Scale { get => scale; set => scale = value; }
         internal WS980DataItemDef ItemDef { get => itemDef; set => itemDef = value; }
 
-        /// <summary>
-        /// Gets the Sensor for a specific itemDef
-        /// </summary>
-        /// <param name="itemDef"></param>
-        /// <returns></returns>
-        internal static WS980Sensor GetSensor(WS980DataItemDef itemDef)
-        {
-            int idx = itemDef.Index;
-            if (dataItemList.ContainsKey(idx)) return dataItemList[idx];    // existiert
-            // neu anlegen
-            return new WS980Sensor(itemDef);
-        }
 
         /// <summary>
-        /// Gets the Sensordate out of the Bytestream
+        /// Gets the Sensordates out of the Byte
         /// </summary>
-        /// <param name="idx"></param> actual position in Bytestream
-        /// <param name="receiveBytes"></param> Bytestream
+        /// <param name="dataBytes"></param>
         /// <param name="valueType"></param>
-        internal void GetValue(ref int idx, byte[] receiveBytes, ValueType valueType)
+        internal void UpdateValue(IEnumerable<byte> dataBytes, ValueType valueType)
         {
-            idx++;
             double val = 0.0;
             if (itemDef.Length == 1)
             {
-                val = receiveBytes[idx] * itemDef.Scale;
+                val = dataBytes.ElementAt(0) * itemDef.Scale;
             }
             else if (itemDef.Length == 2)
             {
-                val = (256 * (int)receiveBytes[idx] + receiveBytes[idx + 1]) * itemDef.Scale;
+                val = (256 * (int)dataBytes.ElementAt(0) + dataBytes.ElementAt(1)) * itemDef.Scale;
             }
 
             else if (itemDef.Length == 4)
@@ -79,11 +61,11 @@ namespace WS980
                 val = 0;
                 for (int i = 0; i < 4; i++)
                 {
-                    val = val * 256 + receiveBytes[idx + i];
+                    val = val * 256 + dataBytes.ElementAt(i);
                 }
                 val = val * itemDef.Scale;
             }
-            idx += itemDef.Length;
+
             switch (valueType)
             {
                 case ValueType.actual:
@@ -102,7 +84,7 @@ namespace WS980
 
         public override string ToString()
         {
-            return String.Format("{0,-12}={1}  <{2},{3}>", name, ActualValueStr, MinValueStr, MaxValueStr);
+            return String.Format("{0,-12}={1}  <{2};{3}>", name, ActualValueStr, MinValueStr, MaxValueStr);
         }
 
         private string str(double val)
@@ -114,5 +96,8 @@ namespace WS980
             string fmt =  "{0:0.".PadRight(5 + noOfDigAfterDecimalPoint, '0')+"}"+unit;
             return String.Format(fmt,val); ;
         }
+
+
+
     }
 }
