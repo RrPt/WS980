@@ -53,7 +53,7 @@ namespace WS980
             }
             else if (itemDef.Length == 2)
             {
-                val = (256 * (int)dataBytes.ElementAt(0) + dataBytes.ElementAt(1)) * itemDef.Scale;
+                val = ((short)(256 * (short)dataBytes.ElementAt(0) + (short)dataBytes.ElementAt(1))) * itemDef.Scale;
             }
 
             else if (itemDef.Length == 4)

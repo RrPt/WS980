@@ -59,12 +59,14 @@ namespace WS980
             new WS980DataItemDef(18,4, "Regen/M", "mm", 1);
             new WS980DataItemDef(19,4, "Regen/J", "mm", 1);
             new WS980DataItemDef(20,4, "Regen/T", "mm", 1);
-            new WS980DataItemDef(21,4, "Licht", "lux", 2);
+            new WS980DataItemDef(21,4, "Licht", "lux", 1);
             new WS980DataItemDef(22,2, "Val22", "");
-            new WS980DataItemDef(23,2, "Val23", "");
+            new WS980DataItemDef(23,1, "Val23", "");
 
 
         }
+
+
 
         internal ConnectionData ConnectionData { get => connectionData; set => connectionData = value; }
         public string Version { get => version; set => version = value; }
@@ -192,7 +194,8 @@ namespace WS980
 
         private void getValues(byte[] receiveBytes, ValueType valueType)
         {
-            Console.WriteLine("{0}: {1} {2}\n", valueType, BitConverter.ToString(receiveBytes), Encoding.ASCII.GetString(receiveBytes));
+            WriteDebugData(receiveBytes, valueType);
+            Console.WriteLine("\n{0}: {1} {2}\n", valueType, BitConverter.ToString(receiveBytes), Encoding.ASCII.GetString(receiveBytes));
             if (receiveBytes[0] != 0xFF) return ;
             if (receiveBytes[1] != 0xFF) return ;
             if (valueType == ValueType.version)
@@ -214,6 +217,13 @@ namespace WS980
                     idx = getNextDataItem(idx, receiveBytes, valueType);
                 }
             }
+        }
+
+        private void WriteDebugData(byte[] receiveBytes, ValueType valueType)
+        {
+            string fn = String.Format("WS980_RAW_DATA_{0}.txt", valueType, ToString());
+            string v = DateTime.Now.ToString() + ";"+ BitConverter.ToString(receiveBytes).Replace("-"," ");
+            File.AppendAllText(fn, v + Environment.NewLine);
         }
 
         private int getNextDataItem(int idx, byte[] receiveBytes, ValueType valueType)
@@ -244,6 +254,16 @@ namespace WS980
             var sensor = new WS980Sensor(itemDef);
             sensorList.Add(dataIdx, sensor);
             return sensor;
+        }
+
+        internal string ToDataLine()
+        {
+            string erg = DateTime.Now.ToString()+";";
+            foreach (var sensor in sensorList.Values)
+            {
+                erg += sensor.ActualValue.ToString() + ";";
+            }
+            return erg;
         }
     }
 }

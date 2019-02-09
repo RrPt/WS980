@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -15,11 +16,12 @@ namespace WS980
     public partial class Form1 : Form
     {
         WS980 ws980 = null;
-        //SortedList<int, string> dataList;
+        string CsvFileName = "WS980-data.csv";
 
         public Form1()
         {
             InitializeComponent();
+            timer1.Start();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -53,6 +55,17 @@ namespace WS980
                 return;
             }
             ws980 = new WS980(WS980List[0]);
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            button1_Click(null, null);
+            WriteToCsv(ws980.ToDataLine());
+        }
+
+        private void WriteToCsv(string v)
+        {
+            File.AppendAllText(CsvFileName,v + Environment.NewLine);
         }
     }
 }
