@@ -13,6 +13,8 @@ namespace WS980
         private double? minValue = null;
         private double? dayMaxValue = null;
         private double? dayMinValue = null;
+        private DateTime? dayMaxTime = null;
+        private DateTime? dayMinTime = null;
         private string name = "?";
         private string unit = "";
         private DateTime time = new DateTime(2019, 1, 1);
@@ -42,6 +44,8 @@ namespace WS980
         public DateTime Time { get => time; set => time = value; }
         public double Scale { get => scale; set => scale = value; }
         internal WS980DataItemDef ItemDef { get => itemDef; set => itemDef = value; }
+        public DateTime? DayMinTime { get => dayMinTime; set => dayMinTime = value; }
+        public DateTime? DayMaxTime { get => dayMaxTime; set => dayMaxTime = value; }
 
         /// <summary>
         /// Gets the Sensordates out of the Byte
@@ -83,24 +87,36 @@ namespace WS980
                     break;
                 case ValueType.dayMin:
                     dayMinValue = val;
+                    dayMinTime = GetTime(dataBytes.Skip(dataBytes.Count()-2));
                     break;
                 case ValueType.dayMax:
                     dayMaxValue = val;
+                    dayMaxTime = GetTime(dataBytes.Skip(dataBytes.Count() - 2));
                     break;
                 default:
                     break;
             }
         }
 
+        private DateTime? GetTime(IEnumerable<byte> timeBytes)
+        {
+            DateTime time = DateTime.Now.Date;
+            time = time.AddHours(timeBytes.ElementAt(0)).AddMinutes(timeBytes.ElementAt(1));
+            return time;
+        }
+
         public override string ToString()
         {
-            if (itemDef.Index==23) return String.Format("{0,-12}={1} (Idx={4})  <{2};{3}><{5};{6}>", name, ActualValueStr, MinValueStr, MaxValueStr, GetUvIdx(actualValue), GetUvIdx(minValue), GetUvIdx(maxValue));
-            return String.Format("{0,-12}={1}  <{2};{3}>   Day:<{4};{5}>", name, ActualValueStr, MinValueStr, MaxValueStr,DayMinValueStr,DayMaxValueStr);
+            string erg = String.Format("{0,-13}={1}", name, ActualValueStr).PadRight(25);
+            erg += String.Format("<{0};{1}>", MinValueStr, MaxValueStr).PadRight(25);
+            erg += String.Format("Day:<{0}({2:HH:mm});{1}({3:HH:mm})>", DayMinValueStr, DayMaxValueStr, DayMinTime, dayMaxTime);
+            if (itemDef.Index == 23) erg += String.Format("   Idx={0}\t<{1} ; {2}>", GetUvIdx(actualValue), GetUvIdx(minValue), GetUvIdx(maxValue));
+            return erg;
         }
 
         private string str(double? val)
         {
-            if (!val.HasValue) return "";
+            if (!val.HasValue) return "   ";
             int noOfDigAfterDecimalPoint = (int)(0.5 - Math.Log10(scale));
             if (noOfDigAfterDecimalPoint < 0) noOfDigAfterDecimalPoint = 0;
             if (noOfDigAfterDecimalPoint > 6) noOfDigAfterDecimalPoint = 6;
