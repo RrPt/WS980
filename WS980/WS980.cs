@@ -12,7 +12,9 @@ namespace WS980
 {
     enum ValueType
     {
-        actual, min, max, version
+        actual, min, max, version,
+        dayMax,
+        dayMin
     }
 
     class ConnectionData
@@ -60,8 +62,8 @@ namespace WS980
             new WS980DataItemDef(19,4, "Regen/J", "mm", 1);
             new WS980DataItemDef(20,4, "Regen/T", "mm", 1);
             new WS980DataItemDef(21,4, "Licht", "lux", 1);
-            new WS980DataItemDef(22,2, "Val22", "");
-            new WS980DataItemDef(23,1, "Val23", "");
+            new WS980DataItemDef(22,2, "UvRaw", "");
+            new WS980DataItemDef(23,2, "UvIdxRaw", "");
 
 
         }
@@ -139,12 +141,14 @@ namespace WS980
 
         internal void getData()
         {
-            byte[] befVersion =   { 0xff, 0xff, 0x50, 0x03, 0x53 };  // 
+            //byte[] befX = { 0xff, 0xff, 0x32, 0x03, 0x35 };  // aktuelle Werte
+            byte[] befVersion =   { 0xff, 0xff, 0x50, 0x03, 0x53 };  // Version
             byte[] befActValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x04, 0x04, 0x19 };   // Aktuell
             byte[] befMaxValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x05, 0x05, 0x1b };   // MAX
             byte[] befMinValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x06, 0x06, 0x1d };     // Min
-            byte[] bef7 = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x07, 0x07, 0x1f };  // 
-            byte[] bef8 = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x08, 0x08, 0x21 };  // 
+            byte[] befDayMaxValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x07, 0x07, 0x1f };  // 
+            byte[] befDayMinValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x08, 0x08, 0x21 };  // 
+
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x00, 0x80, 0x82, 0x18 };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x00, 0x80, 0x02, 0x18 };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x01, 0x80, 0x83, 0x1a };  // 
@@ -154,8 +158,10 @@ namespace WS980
             getValues(getData(befActValues), ValueType.actual);
             getValues(getData(befMaxValues), ValueType.max);
             getValues(getData(befMinValues), ValueType.min);
+            getValues(getData(befDayMaxValues), ValueType.dayMax);
+            getValues(getData(befDayMinValues), ValueType.dayMin);
 
-            return ;
+            return;
         }
 
 
@@ -206,6 +212,21 @@ namespace WS980
             }
             else
             {
+                // Prüfsumme berechnen
+                int idxCrc = receiveBytes.Length - 1;
+                byte crcSoll = receiveBytes[idxCrc];
+                byte crcIst = 0;
+                for (int i = 2; i < receiveBytes.Length - 1; i++)
+                {
+                    crcIst += receiveBytes[i];
+                    //Console.WriteLine("CRC: {0:X2} {1:X4} =? {2:X4}  dif={3:X4}\n", receiveBytes[i],crcIst, crcSol,crcSol-crcIst);
+                }
+                if (crcIst!=crcSoll)
+                {
+                    Console.WriteLine("Prüfsumme falsch CRCIst={0}  CrcSoll={1}\n", crcIst, crcSoll);
+                    return;
+                }
+                // Befehl prüefen
                 if (receiveBytes[2] != 0x0b) return;
                 // todo evtl. mit dem Befehl[2] vergleichen
                 int len = 256 * (int)receiveBytes[3] + receiveBytes[4];
@@ -228,7 +249,9 @@ namespace WS980
 
         private int getNextDataItem(int idx, byte[] receiveBytes, ValueType valueType)
         {
-            int dataIdx = receiveBytes[idx++];
+            int dataIdx = receiveBytes[idx];
+            idx++;
+            if (valueType == ValueType.dayMax | valueType == ValueType.dayMin) dataIdx -= 0x40;
             if (!WS980DataItemDef.dataItemList.ContainsKey(dataIdx))
             {
                 Console.WriteLine("SensorNo {0} nicht definiert", dataIdx);
@@ -239,7 +262,7 @@ namespace WS980
 
             sensor?.UpdateValue(receiveBytes.Skip(idx).Take(sensor.ItemDef.Length), valueType);
             idx += sensor.ItemDef.Length;
-
+            if (valueType == ValueType.dayMax | valueType == ValueType.dayMin) idx+=2;
             return idx;
         }
 
