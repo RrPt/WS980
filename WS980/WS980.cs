@@ -1,4 +1,9 @@
-﻿using System;
+﻿
+//Infos siehe auch 
+//https://github.com/matthewwall/weewx-wh23xx/blob/master/bin/user/wh23xx.py
+//https://www.elv.de/topic/protokolldefinition-zum-datenaustausch-ws980-zum-pc.html
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -62,8 +67,8 @@ namespace WS980
             new WS980DataItemDef(19,4, "Regen/J", "mm", 1);
             new WS980DataItemDef(20,4, "Regen/T", "mm", 1);
             new WS980DataItemDef(21,4, "Licht", "lux", 1);
-            new WS980DataItemDef(22,2, "UvRaw", "");
-            new WS980DataItemDef(23,2, "UvIdxRaw", "");
+            new WS980DataItemDef(22,2, "UvRaw", "uW/m2");
+            new WS980DataItemDef(23,1, "UvIdxRaw", "");
 
 
         }
@@ -141,43 +146,43 @@ namespace WS980
 
         internal void getData()
         {
-            //byte[] befX = { 0xff, 0xff, 0x32, 0x03, 0x35 };  // aktuelle Werte
             byte[] befVersion =   { 0xff, 0xff, 0x50, 0x03, 0x53 };  // Version
-            byte[] befActValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x04, 0x04, 0x19 };   // Aktuell
-            byte[] befMaxValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x05, 0x05, 0x1b };   // MAX
-            byte[] befMinValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x06, 0x06, 0x1d };     // Min
-            byte[] befDayMaxValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x07, 0x07, 0x1f };  // DayMax
-            byte[] befDayMinValues = { 0xff, 0xff, 0x0b, 0x00, 0x06, 0x08, 0x08, 0x21 };  // DayMin
 
-            //                           bef          len                                CRC
+            byte[] befActValues = Tools.GetBefArray(4);   // Aktuell
+            byte[] befMaxValues = Tools.GetBefArray(5);   // MAX
+            byte[] befMinValues = Tools.GetBefArray(6);    // Min
+            byte[] befDayMaxValues = Tools.GetBefArray(7); // DayMax
+            byte[] befDayMinValues = Tools.GetBefArray(8);  // DayMin
+
+            // Eprom auslesen
+            // History Records ab 0x2140..8200  zeiten ab 0x0300..0x0600 ???
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x00, 0x80, 0x82, 0x18 };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x00, 0x80, 0x02, 0x18 };  // 
+            //...
 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x01, 0x80, 0x83, 0x1a };  // 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x01, 0x80, 0x03, 0x1a };  // 
-
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x02, 0x80, 0x84, 0x1C };  // 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x02, 0x80, 0x04, 0x1C };  // 
-
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x03, 0x80, 0x85, 0x1E };  // 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x03, 0x80, 0x05, 0x1E };  // 
-
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x04, 0x80, 0x86, 0x20 };  // 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x04, 0x80, 0x06, 0x20 };  // 
-
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x05, 0x80, 0x87, 0x22 };  // 
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x80, 0x05, 0x80, 0x07, 0x22 };  // 
-
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x06, 0x80, 0x88, 0x24 };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0xFA, 0xF3, 0x90, 0x7F, 0x12 };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x8A, 0x4F, 0x90, 0x10, 0x34 };  // 
 
-            getValues(getData(befVersion), ValueType.version);
-            getValues(getData(befActValues), ValueType.actual);
-            getValues(getData(befMaxValues), ValueType.max);
-            getValues(getData(befMinValues), ValueType.min);
-            getValues(getData(befDayMaxValues), ValueType.dayMax);
-            getValues(getData(befDayMinValues), ValueType.dayMin);
+            Console.WriteLine("VER " + Tools.ToString(getValues(getData(befVersion), ValueType.version)));
+            Console.WriteLine("AKT" + Tools.ToString(getValues(getData(befActValues), ValueType.actual)));
+            Console.WriteLine("MAX" + Tools.ToString(getValues(getData(befMaxValues), ValueType.max)));
+            Console.WriteLine("MIN" + Tools.ToString(getValues(getData(befMinValues), ValueType.min)));
+            Console.WriteLine("DAX" + Tools.ToString(getValues(getData(befDayMaxValues), ValueType.dayMax)));
+            Console.WriteLine("DIN" + Tools.ToString(getValues(getData(befDayMinValues), ValueType.dayMin)));
+
+            byte[] bef;
+            byte[] erg;
+            for (ushort adr = 0; adr < 0x9780; adr+=0x10)
+            {
+                bef = Tools.GetReadEpromArray(adr, 0x20);
+                erg = getData(bef);
+                var data = erg.Skip(9).Take(erg.Length - 11).ToArray();
+                string ergStr =  System.Text.Encoding.Default.GetString(data).Replace('\n', '.').Replace('\r', '.');
+                Console.WriteLine("{0:X4}: {1}  {2}",adr,Tools.ToString(data),ergStr);
+            }
+
+
+
 
             return;
         }
@@ -189,21 +194,26 @@ namespace WS980
             try
             {
                 TcpClient tcpclnt = new TcpClient();
-                Console.WriteLine("Connecting.....");
+                //Console.WriteLine("Connecting.....");
 
                 tcpclnt.Connect(connectionData.IP, connectionData.Port);
 
-                Console.WriteLine("Connected");
+                //Console.WriteLine("Connected");
                 Stream stm = tcpclnt.GetStream();
-                Console.WriteLine("Transmitting.....");
+                //Console.WriteLine("Transmitting.....");
 
                 stm.Write(bef, 0, bef.Length);
+                //Console.WriteLine("Sent: "+Tools.ToString(bef));
+                byte crcIst1 = Tools.calcChecksum(bef.Skip(5).Take(bef.Length - 7));
+                byte crcIst2 = Tools.calcChecksum(bef.Skip(2).Take(bef.Length - 3));
+                //Console.WriteLine("Prüfsummen: {0:X2}  {1:X2}", crcIst1, crcIst2);
 
                 int k = stm.Read(recBuf, 0, recBuf.Length);
                 recBuf = recBuf.Take(k).ToArray();
 
-                for (int i = 0; i < k; i++)
-                    Console.Write("{0:X2} ",recBuf[i]);
+                //Console.WriteLine(Tools.ToString(recBuf));
+                //for (int i = 0; i < k; i++)
+                //    Console.Write("{0:X2} ",recBuf[i]);
 
                 tcpclnt.Close();
             }
@@ -216,36 +226,37 @@ namespace WS980
         }
 
 
-        private void getValues(byte[] receiveBytes, ValueType valueType)
+        private byte[] getValues(byte[] receiveBytes, ValueType valueType)
         {
             WriteDebugData(receiveBytes, valueType);
-            Console.WriteLine("\n{0}: {1} {2}\n", valueType, BitConverter.ToString(receiveBytes), Encoding.ASCII.GetString(receiveBytes));
-            if (receiveBytes[0] != 0xFF) return ;
-            if (receiveBytes[1] != 0xFF) return ;
+            //Console.WriteLine("\n{0}: {1} {2}\n", valueType, BitConverter.ToString(receiveBytes), Encoding.ASCII.GetString(receiveBytes));
+            if (receiveBytes[0] != 0xFF) return null;
+            if (receiveBytes[1] != 0xFF) return null;
             if (valueType == ValueType.version)
             {
-                if (receiveBytes[2] != 0x50) return;
+                if (receiveBytes[2] != 0x50) return null;
                 int len =  (int)receiveBytes[3];
                 version = Encoding.ASCII.GetString(receiveBytes.Skip(5).ToArray());
             }
             else
             {
                 // Prüfsumme berechnen
-                int idxCrc = receiveBytes.Length - 1;
-                byte crcSoll = receiveBytes[idxCrc];
-                byte crcIst = 0;
-                for (int i = 2; i < receiveBytes.Length - 1; i++)
+                int idxCrc = receiveBytes.Length - 2;
+                byte crcIst1 = Tools.calcChecksum(receiveBytes.Skip(5).Take(receiveBytes.Length - 7));
+                byte crcIst2 = Tools.calcChecksum(receiveBytes.Skip(2).Take(receiveBytes.Length - 3));
+                //Console.WriteLine("Prüfsummen: {0:X2}  {1:X2}",crcIst1,crcIst2  );
+                if (crcIst1!= receiveBytes[idxCrc])
                 {
-                    crcIst += receiveBytes[i];
-                    //Console.WriteLine("CRC: {0:X2} {1:X4} =? {2:X4}  dif={3:X4}\n", receiveBytes[i],crcIst, crcSol,crcSol-crcIst);
+                    Console.WriteLine("1. Prüfsumme falsch CRCIst={0}  CrcSoll={1}\n", crcIst2, receiveBytes[idxCrc]);
+                    return null;
                 }
-                if (crcIst!=crcSoll)
+                if (crcIst2 != receiveBytes[idxCrc+1])
                 {
-                    Console.WriteLine("Prüfsumme falsch CRCIst={0}  CrcSoll={1}\n", crcIst, crcSoll);
-                    return;
+                    Console.WriteLine("2. Prüfsumme falsch CRCIst={0}  CrcSoll={1}\n", crcIst2, receiveBytes[idxCrc+1]);
+                    return null;
                 }
-                // Befehl prüefen
-                if (receiveBytes[2] != 0x0b) return;
+                // Befehl prüfen
+                if (receiveBytes[2] != 0x0b) return null;
                 // todo evtl. mit dem Befehl[2] vergleichen
                 int len = 256 * (int)receiveBytes[3] + receiveBytes[4];
                 int para = receiveBytes[5];
@@ -256,6 +267,7 @@ namespace WS980
                     idx = getNextDataItem(idx, receiveBytes, valueType);
                 }
             }
+            return receiveBytes;
         }
 
         private void WriteDebugData(byte[] receiveBytes, ValueType valueType)

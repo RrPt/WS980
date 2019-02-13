@@ -54,6 +54,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tools.cs" />
     <Compile Include="WS980.cs" />
     <Compile Include="WS980DataItemDef.cs" />
     <Compile Include="WS980Sensor.cs" />

@@ -110,7 +110,7 @@ namespace WS980
             string erg = String.Format("{0,-13}={1}", name, ActualValueStr).PadRight(25);
             erg += String.Format("<{0};{1}>", MinValueStr, MaxValueStr).PadRight(25);
             erg += String.Format("Day:<{0}({2:HH:mm});{1}({3:HH:mm})>", DayMinValueStr, DayMaxValueStr, DayMinTime, dayMaxTime);
-            if (itemDef.Index == 23) erg += String.Format("   Idx={0}\t<{1} ; {2}>", GetUvIdx(actualValue), GetUvIdx(minValue), GetUvIdx(maxValue));
+            if (itemDef.Index == 22) erg += String.Format("   Idx={0}\t<{1} ; {2}>", GetUvIdx(actualValue), GetUvIdx(minValue), GetUvIdx(maxValue));
             return erg;
         }
 
