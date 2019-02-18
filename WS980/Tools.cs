@@ -41,17 +41,8 @@ namespace WS980
             return arr;
         }
 
-        public static byte[] GetReadEpromArray(ushort adr, byte size)
-        {
-            //                               LenHi LenLo Bef   ardLo adrHi size  crc1  crc2
-            byte[] arr = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
-            //arr[4] = (byte)(arr.Length - 2);
-            arr[6] = (byte)(adr & 0xFF);
-            arr[7] = (byte)(adr>>8);
-            arr[8] = size;
-            arr[arr.Length - 2] = Tools.calcChecksum(arr.Skip(5).Take(arr.Length - 7));
-            arr[arr.Length - 1] = Tools.calcChecksum(arr.Skip(2).Take(arr.Length - 3));
-            return arr;
-        }
+
+
+
     }
 }

@@ -22,6 +22,20 @@ namespace WS980
         dayMin
     }
 
+    class TableDataItem
+    {
+        public int pageNo;
+        public DateTime startTime;
+        public ushort samplingIntervalInSec;
+        public byte numberOfRecords;
+        public ushort startDataAdr;
+
+        public override string ToString()
+        {
+            return String.Format("Page[{0}]: Adr:{1:X4} Start:{2} Interv:{3}s Anz:{4}",pageNo,startDataAdr,startTime,samplingIntervalInSec,numberOfRecords);
+        }
+    }
+
     class ConnectionData
     {
         public String MAC = "mac";
@@ -42,6 +56,87 @@ namespace WS980
         private string version = "V?";
         // List of  Sensors
         private SortedList<int, WS980Sensor> sensorList = new SortedList<int, WS980Sensor>();
+        private byte[] pageFlags = new byte[111];
+        private TableDataItem[] tableData = new TableDataItem[111];
+        private List<HistoricDataRecord> historicDataRecordList = new List<HistoricDataRecord>(); 
+
+        internal void getHistory()
+        {
+            getPageFlags();
+            getTableData();
+            getAllHistoricRecords();
+        }
+
+        private void getAllHistoricRecords()
+        {
+            foreach (var tdi in tableData)
+            {
+                if (tdi!=null)
+                {
+                    Console.WriteLine("Page:{0}  Start:{1}   Anz={2}",tdi.pageNo,tdi.startTime,tdi.numberOfRecords);
+                    for (int i = 0; i < tdi.numberOfRecords; i++)
+                    {
+                        DateTime recTime = tdi.startTime.AddSeconds(i * tdi.samplingIntervalInSec);
+                        var byteRecord = ReadEprom(tdi.startDataAdr, 18);
+                        HistoricDataRecord hdr = new HistoricDataRecord(recTime,byteRecord);
+                        historicDataRecordList.Add(hdr);
+                        var rec = Tools.ToString(byteRecord);
+                        Console.WriteLine("{0}:{1}", recTime,rec);
+                    }
+                }
+            }
+        }
+
+        private void getTableData()
+        {
+            ushort firstAdr = 0x2C8;
+            ushort lastAdr = 0x63F;
+            byte blockSize = 0x8;
+            ushort adr = firstAdr;
+            while (adr <= lastAdr)
+            {
+                int page = (adr - firstAdr) / 8;
+                if (pageFlags[page] <= 0x20)
+                {
+                    var arr = ReadEprom(adr, blockSize);
+                    // todo wenn exception bei Datum, dann record nochmal einlesen
+                    TableDataItem tableDataItem = new TableDataItem();
+                    tableDataItem.pageNo = page;
+                    tableDataItem.startDataAdr = (ushort)(0x0640 + page * 18);
+                    tableDataItem.numberOfRecords = (byte)(pageFlags[page] + 1);
+                    tableDataItem.startTime = new DateTime(2000 + arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]);
+                    tableDataItem.samplingIntervalInSec =(ushort)( arr[7] == 0x01 ?  arr[6] : arr[6] * 60);
+                    tableData[page] = tableDataItem;
+                    Console.WriteLine("TableData[{0}]:{1}", page, tableData[page]);
+                }
+                else Console.WriteLine("TableData[{0}]:???", page);
+                adr += blockSize;
+            };
+        }
+
+        private void getPageFlags()
+        {
+            ushort firstAdr = 0x259;
+            ushort lastAdr = 0x2c7;
+            byte blockSize = 0x20;
+            ushort adr = firstAdr;
+            while (adr <= lastAdr )
+            {
+                if (adr + blockSize > lastAdr) blockSize = (byte)(lastAdr - adr+1);
+                var arr = ReadEprom(adr, blockSize);
+                for (ushort i = 0; i < blockSize; i++)
+                {
+                    //if (arr[i]!=0xff)
+                    Console.Write("PageFlag[{0}]({1:X4}={2:X2})", adr + i- firstAdr, adr+i,arr[i]);
+                    if (arr[i] == (byte)0xFF) Console.WriteLine(" empty");
+                    else if (arr[i] > (byte)0x20) Console.WriteLine(" error");
+                    else  Console.WriteLine();
+                    pageFlags[adr + i - firstAdr] = arr[i];
+                }
+                adr += blockSize;
+                Console.WriteLine();
+            };
+        }
 
         public WS980(ConnectionData connectionData)
         {
@@ -83,6 +178,7 @@ namespace WS980
         static UdpClient receiveClient;
         static IPEndPoint RemoteIpEndPoint;
         static List<ConnectionData> connectionDataList = new List<ConnectionData>();
+        private byte lcdContrast;
 
         static public List<ConnectionData> RequestAllStations()
         {
@@ -163,32 +259,43 @@ namespace WS980
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0xFA, 0xF3, 0x90, 0x7F, 0x12 };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x8A, 0x4F, 0x90, 0x10, 0x34 };  // 
 
-            Console.WriteLine("VER " + Tools.ToString(getValues(getData(befVersion), ValueType.version)));
-            Console.WriteLine("AKT" + Tools.ToString(getValues(getData(befActValues), ValueType.actual)));
-            Console.WriteLine("MAX" + Tools.ToString(getValues(getData(befMaxValues), ValueType.max)));
-            Console.WriteLine("MIN" + Tools.ToString(getValues(getData(befMinValues), ValueType.min)));
-            Console.WriteLine("DAX" + Tools.ToString(getValues(getData(befDayMaxValues), ValueType.dayMax)));
-            Console.WriteLine("DIN" + Tools.ToString(getValues(getData(befDayMinValues), ValueType.dayMin)));
+            Console.WriteLine("VER " + Tools.ToString(getValues(getAnswer(befVersion), ValueType.version)));
+            Console.WriteLine("AKT" + Tools.ToString(getValues(getAnswer(befActValues), ValueType.actual)));
+            Console.WriteLine("MAX" + Tools.ToString(getValues(getAnswer(befMaxValues), ValueType.max)));
+            Console.WriteLine("MIN" + Tools.ToString(getValues(getAnswer(befMinValues), ValueType.min)));
+            Console.WriteLine("DAX" + Tools.ToString(getValues(getAnswer(befDayMaxValues), ValueType.dayMax)));
+            Console.WriteLine("DIN" + Tools.ToString(getValues(getAnswer(befDayMinValues), ValueType.dayMin)));
 
-            byte[] bef;
+            //byte[] bef;
             byte[] erg;
-            for (ushort adr = 0; adr < 0x9780; adr+=0x10)
-            {
-                bef = Tools.GetReadEpromArray(adr, 0x20);
-                erg = getData(bef);
-                var data = erg.Skip(9).Take(erg.Length - 11).ToArray();
-                string ergStr =  System.Text.Encoding.Default.GetString(data).Replace('\n', '.').Replace('\r', '.');
-                Console.WriteLine("{0:X4}: {1}  {2}",adr,Tools.ToString(data),ergStr);
-            }
+            byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 13, 0x01, 19, 2, 16,17,30,00, 1, 0x82, 0x18 };  // 
+            bef[bef.Length - 2] = Tools.calcChecksum(bef.Skip(5).Take(bef.Length - 7));
+            bef[bef.Length - 1] = Tools.calcChecksum(bef.Skip(2).Take(bef.Length - 3));
+            erg = getAnswer(bef);
+            //for (ushort adr = 0; adr < 0x9780; adr+=0x10)
+            //{
+            //    bef = Tools.GetReadEpromArray(adr, 0x20);
+            //    erg = getData(bef);
+            //    var data = erg.Skip(9).Take(erg.Length - 11).ToArray();
+            //    string ergStr =  System.Text.Encoding.Default.GetString(data).Replace('\n', '.').Replace('\r', '.');
+            //    Console.WriteLine("{0:X4}: {1}  {2}",adr,Tools.ToString(data),ergStr);
+            //}
 
+            // write
 
+            //byte[] dta = new byte[] { lcdContrast };
+            //bef = Tools.GetWriteEpromArray(0x1b,dta );
+            //erg = getData(bef);
 
+            //bef = Tools.GetReadEpromArray(0x1b, 1);
+            //erg = getData(bef);
+            //Console.WriteLine("lcd={0}",erg[9]);
 
             return;
         }
 
 
-        private byte[] getData(byte[] bef)
+        private byte[] getAnswer(byte[] bef)
         {
             byte[] recBuf = new byte[100];
             try
@@ -207,8 +314,8 @@ namespace WS980
                 byte crcIst1 = Tools.calcChecksum(bef.Skip(5).Take(bef.Length - 7));
                 byte crcIst2 = Tools.calcChecksum(bef.Skip(2).Take(bef.Length - 3));
                 //Console.WriteLine("Prüfsummen: {0:X2}  {1:X2}", crcIst1, crcIst2);
-
-                int k = stm.Read(recBuf, 0, recBuf.Length);
+                stm.ReadTimeout = 1000;
+                int k = stm.Read(recBuf, 0, recBuf.Length);  //todo hier noch timeout einbauen und behandeln
                 recBuf = recBuf.Take(k).ToArray();
 
                 //Console.WriteLine(Tools.ToString(recBuf));
@@ -256,8 +363,7 @@ namespace WS980
                     return null;
                 }
                 // Befehl prüfen
-                if (receiveBytes[2] != 0x0b) return null;
-                // todo evtl. mit dem Befehl[2] vergleichen
+                if (receiveBytes[2] != 0x0b) return null;       
                 int len = 256 * (int)receiveBytes[3] + receiveBytes[4];
                 int para = receiveBytes[5];
                 int idx = 6;
@@ -322,6 +428,52 @@ namespace WS980
                 erg += sensor.ActualValue.ToString() + ";";
             }
             return erg;
+        }
+
+        public byte[] ReadEprom(ushort adr, byte size)
+        {
+            var bef = GetReadEpromArrayBef(adr, size);
+            var answer = getAnswer(bef);
+            return answer.Skip(9).Take(size).ToArray();
+        }
+
+        public static byte[] GetReadEpromArrayBef(ushort adr, byte size)
+        {
+            //                               LenHi LenLo Bef   ardLo adrHi size  crc1  crc2
+            byte[] arr = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            //arr[4] = (byte)(arr.Length - 2);
+            arr[6] = (byte)(adr & 0xFF);
+            arr[7] = (byte)(adr >> 8);
+            arr[8] = size;
+            arr[arr.Length - 2] = Tools.calcChecksum(arr.Skip(5).Take(arr.Length - 7));
+            arr[arr.Length - 1] = Tools.calcChecksum(arr.Skip(2).Take(arr.Length - 3));
+            return arr;
+        }
+
+        public static byte[] GetWriteEpromArrayBef(ushort adr, byte[] dataArr)
+        {
+            byte[] arr = new byte[11 + dataArr.Length];
+
+            //                                 LenHi LenLo Bef   ardLo adrHi size            crc1  crc2
+            //byte[] arr = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x03, 0x00, 0x00, 0x00, dataArr ,   0x00, 0x00 };
+            int size = 9 + dataArr.Length;
+            arr[0] = (byte)0xFF;
+            arr[1] = (byte)0xFF;
+            arr[2] = (byte)0x0b;
+            arr[3] = (byte)(size >> 8);
+            arr[4] = (byte)(size & 0xFF);
+            arr[5] = (byte)0x03;    // write Eprom
+            //arr[4] = (byte)(arr.Length - 2);
+            arr[6] = (byte)(adr & 0xFF);
+            arr[7] = (byte)(adr >> 8);
+            arr[8] = (byte)dataArr.Length;
+            for (int i = 0; i < dataArr.Length; i++)
+            {
+                arr[9 + i] = dataArr[i];
+            }
+            arr[arr.Length - 2] = Tools.calcChecksum(arr.Skip(5).Take(arr.Length - 7));
+            arr[arr.Length - 1] = Tools.calcChecksum(arr.Skip(2).Take(arr.Length - 3));
+            return arr;
         }
     }
 }
