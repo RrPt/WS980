@@ -52,6 +52,7 @@ namespace WS980
                 return;
             }
             ws980 = new WS980(WS980List[0]);
+            button1_Click(null, null);
         }
 
         private void timer1_Tick(object sender, EventArgs e)

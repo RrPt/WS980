@@ -73,15 +73,20 @@ namespace WS980
             {
                 if (tdi!=null)
                 {
+                    // todo 2 Zeilen Debugging:
+                    if ((DateTime.Now-tdi.startTime).TotalMinutes >120 ) continue;
+                    if (tdi.pageNo < 39) continue;
+
                     Console.WriteLine("Page:{0}  Start:{1}   Anz={2}",tdi.pageNo,tdi.startTime,tdi.numberOfRecords);
                     for (int i = 0; i < tdi.numberOfRecords; i++)
                     {
                         DateTime recTime = tdi.startTime.AddSeconds(i * tdi.samplingIntervalInSec);
-                        var byteRecord = ReadEprom(tdi.startDataAdr, 18);
+                        var byteRecord = ReadEprom((ushort)(tdi.startDataAdr+18*i), 18);
                         HistoricDataRecord hdr = new HistoricDataRecord(recTime,byteRecord);
+                        var rec = Tools.ToString(byteRecord,"{0:X2}={0:d3}  ");
+                        //Console.WriteLine("{0}:[0x{2:x4}] {1}", recTime,rec, tdi.startDataAdr + 18 * i);
+                        Console.WriteLine("    {0}",hdr.ToString());
                         historicDataRecordList.Add(hdr);
-                        var rec = Tools.ToString(byteRecord);
-                        Console.WriteLine("{0}:{1}", recTime,rec);
                     }
                 }
             }
@@ -98,16 +103,30 @@ namespace WS980
                 int page = (adr - firstAdr) / 8;
                 if (pageFlags[page] <= 0x20)
                 {
-                    var arr = ReadEprom(adr, blockSize);
-                    // todo wenn exception bei Datum, dann record nochmal einlesen
-                    TableDataItem tableDataItem = new TableDataItem();
-                    tableDataItem.pageNo = page;
-                    tableDataItem.startDataAdr = (ushort)(0x0640 + page * 18);
-                    tableDataItem.numberOfRecords = (byte)(pageFlags[page] + 1);
-                    tableDataItem.startTime = new DateTime(2000 + arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]);
-                    tableDataItem.samplingIntervalInSec =(ushort)( arr[7] == 0x01 ?  arr[6] : arr[6] * 60);
-                    tableData[page] = tableDataItem;
-                    Console.WriteLine("TableData[{0}]:{1}", page, tableData[page]);
+                    int retry = 0;
+                    bool ok = false;
+                    while (!ok&retry<3)
+                    {
+                        try
+                        {
+                            var arr = ReadEprom(adr, blockSize);
+                            // todo wenn exception bei Datum, dann record nochmal einlesen
+                            TableDataItem tableDataItem = new TableDataItem();
+                            tableDataItem.pageNo = page;
+                            tableDataItem.startDataAdr = (ushort)(0x0640 + page * 18*32);
+                            tableDataItem.numberOfRecords = (byte)(pageFlags[page] + 1);
+                            tableDataItem.startTime = new DateTime(2000 + arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]); // UTC
+                            tableDataItem.samplingIntervalInSec = (ushort)(arr[7] == 0x01 ? arr[6] : arr[6] * 60);
+                            tableData[page] = tableDataItem;
+                            ok = true;
+                        }
+                        catch (Exception)
+                        {
+                            retry++;
+                        }
+
+                    }
+                    Console.WriteLine("TableData {0} [0x{1:X4}] : {2}", page,adr, tableData[page]);
                 }
                 else Console.WriteLine("TableData[{0}]:???", page);
                 adr += blockSize;
