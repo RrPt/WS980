@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -73,5 +74,20 @@ namespace WS980
 
         }
 
+
+        public static void WriteLine(string format, params object[] args)
+        {
+            string txt = String.Format(format, args);
+            Trace.WriteLine(txt); 
+        }
+
+        public static void WriteLine()
+        {
+            Trace.WriteLine("");
+        }
+        public static void WriteLine(string txt)
+        {
+            Trace.WriteLine(txt);
+        }
     }
 }

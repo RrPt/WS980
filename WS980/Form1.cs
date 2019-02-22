@@ -26,15 +26,15 @@ namespace WS980
 
         private void button1_Click(object sender, EventArgs e)
         {
-            //ws980.getData();
-            //tBOut.AppendText(ws980.Version + Environment.NewLine);
-            //foreach (var sensor in    ws980.SensorList.Values)
-            //{
-            //    tBOut.AppendText(sensor.ToString()+Environment.NewLine);
-            //}
-            //tBOut.AppendText("---------------------------" + Environment.NewLine);
+            ws980.getData();
+            tBOut.AppendText(ws980.Version + Environment.NewLine);
+            foreach (var sensor in ws980.SensorList.Values)
+            {
+                tBOut.AppendText(sensor.ToString() + Environment.NewLine);
+            }
+            tBOut.AppendText("---------------------------" + Environment.NewLine);
 
-            ws980.getHistory();
+            //ws980.getHistory();
         }
 
 
@@ -58,7 +58,7 @@ namespace WS980
         private void timer1_Tick(object sender, EventArgs e)
         {
             button1_Click(null, null);
-            WriteToCsv(ws980.ToDataLine());
+            WriteToCsv(ws980.GetAllActualValues());
         }
 
         private void WriteToCsv(string v)

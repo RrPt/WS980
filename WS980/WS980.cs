@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -77,15 +78,15 @@ namespace WS980
                     if ((DateTime.Now-tdi.startTime).TotalMinutes >120 ) continue;
                     if (tdi.pageNo < 39) continue;
 
-                    Console.WriteLine("Page:{0}  Start:{1}   Anz={2}",tdi.pageNo,tdi.startTime,tdi.numberOfRecords);
+                    Tools.WriteLine("Page:{0}  Start:{1}   Anz={2}",tdi.pageNo,tdi.startTime,tdi.numberOfRecords);
                     for (int i = 0; i < tdi.numberOfRecords; i++)
                     {
                         DateTime recTime = tdi.startTime.AddSeconds(i * tdi.samplingIntervalInSec);
                         var byteRecord = ReadEprom((ushort)(tdi.startDataAdr+18*i), 18);
                         HistoricDataRecord hdr = new HistoricDataRecord(recTime,byteRecord);
                         var rec = Tools.ToString(byteRecord,"{0:X2}={0:d3}  ");
-                        //Console.WriteLine("{0}:[0x{2:x4}] {1}", recTime,rec, tdi.startDataAdr + 18 * i);
-                        Console.WriteLine("    {0}",hdr.ToString());
+                        //Tools.WriteLine("{0}:[0x{2:x4}] {1}", recTime,rec, tdi.startDataAdr + 18 * i);
+                        Tools.WriteLine("    {0}",hdr.ToString());
                         historicDataRecordList.Add(hdr);
                     }
                 }
@@ -126,9 +127,9 @@ namespace WS980
                         }
 
                     }
-                    Console.WriteLine("TableData {0} [0x{1:X4}] : {2}", page,adr, tableData[page]);
+                    Tools.WriteLine("TableData {0} [0x{1:X4}] : {2}", page,adr, tableData[page]);
                 }
-                else Console.WriteLine("TableData[{0}]:???", page);
+                else Tools.WriteLine("TableData[{0}]:???", page);
                 adr += blockSize;
             };
         }
@@ -146,14 +147,14 @@ namespace WS980
                 for (ushort i = 0; i < blockSize; i++)
                 {
                     //if (arr[i]!=0xff)
-                    Console.Write("PageFlag[{0}]({1:X4}={2:X2})", adr + i- firstAdr, adr+i,arr[i]);
-                    if (arr[i] == (byte)0xFF) Console.WriteLine(" empty");
-                    else if (arr[i] > (byte)0x20) Console.WriteLine(" error");
-                    else  Console.WriteLine();
+                    Tools.WriteLine("PageFlag[{0}]({1:X4}={2:X2})", adr + i- firstAdr, adr+i,arr[i]);
+                    if (arr[i] == (byte)0xFF) Tools.WriteLine(" empty");
+                    else if (arr[i] > (byte)0x20) Tools.WriteLine(" error");
+                    else Tools.WriteLine();
                     pageFlags[adr + i - firstAdr] = arr[i];
                 }
                 adr += blockSize;
-                Console.WriteLine();
+                Tools.WriteLine();
             };
         }
 
@@ -278,12 +279,12 @@ namespace WS980
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0xFA, 0xF3, 0x90, 0x7F, 0x12 };  // 
             //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 0x09, 0x02, 0x8A, 0x4F, 0x90, 0x10, 0x34 };  // 
 
-            Console.WriteLine("VER " + Tools.ToString(getValues(getAnswer(befVersion), ValueType.version)));
-            Console.WriteLine("AKT" + Tools.ToString(getValues(getAnswer(befActValues), ValueType.actual)));
-            Console.WriteLine("MAX" + Tools.ToString(getValues(getAnswer(befMaxValues), ValueType.max)));
-            Console.WriteLine("MIN" + Tools.ToString(getValues(getAnswer(befMinValues), ValueType.min)));
-            Console.WriteLine("DAX" + Tools.ToString(getValues(getAnswer(befDayMaxValues), ValueType.dayMax)));
-            Console.WriteLine("DIN" + Tools.ToString(getValues(getAnswer(befDayMinValues), ValueType.dayMin)));
+            Tools.WriteLine("VER " + Tools.ToString(getValues(getAnswer(befVersion), ValueType.version)));
+            Tools.WriteLine("AKT" + Tools.ToString(getValues(getAnswer(befActValues), ValueType.actual)));
+            Tools.WriteLine("MAX" + Tools.ToString(getValues(getAnswer(befMaxValues), ValueType.max)));
+            Tools.WriteLine("MIN" + Tools.ToString(getValues(getAnswer(befMinValues), ValueType.min)));
+            Tools.WriteLine("DAX" + Tools.ToString(getValues(getAnswer(befDayMaxValues), ValueType.dayMax)));
+            Tools.WriteLine("DIN" + Tools.ToString(getValues(getAnswer(befDayMinValues), ValueType.dayMin)));
 
             //byte[] bef;
             byte[] erg;
@@ -297,7 +298,7 @@ namespace WS980
             //    erg = getData(bef);
             //    var data = erg.Skip(9).Take(erg.Length - 11).ToArray();
             //    string ergStr =  System.Text.Encoding.Default.GetString(data).Replace('\n', '.').Replace('\r', '.');
-            //    Console.WriteLine("{0:X4}: {1}  {2}",adr,Tools.ToString(data),ergStr);
+            //    Tools.WriteLine("{0:X4}: {1}  {2}",adr,Tools.ToString(data),ergStr);
             //}
 
             // write
@@ -308,7 +309,7 @@ namespace WS980
 
             //bef = Tools.GetReadEpromArray(0x1b, 1);
             //erg = getData(bef);
-            //Console.WriteLine("lcd={0}",erg[9]);
+            //Tools.WriteLine("lcd={0}",erg[9]);
 
             return;
         }
@@ -320,33 +321,33 @@ namespace WS980
             try
             {
                 TcpClient tcpclnt = new TcpClient();
-                //Console.WriteLine("Connecting.....");
+                //Tools.WriteLine("Connecting.....");
 
                 tcpclnt.Connect(connectionData.IP, connectionData.Port);
 
-                //Console.WriteLine("Connected");
+                //Tools.WriteLine("Connected");
                 Stream stm = tcpclnt.GetStream();
-                //Console.WriteLine("Transmitting.....");
+                //Tools.WriteLine("Transmitting.....");
 
                 stm.Write(bef, 0, bef.Length);
-                //Console.WriteLine("Sent: "+Tools.ToString(bef));
+                //Tools.WriteLine("Sent: "+Tools.ToString(bef));
                 byte crcIst1 = Tools.calcChecksum(bef.Skip(5).Take(bef.Length - 7));
                 byte crcIst2 = Tools.calcChecksum(bef.Skip(2).Take(bef.Length - 3));
-                //Console.WriteLine("Prüfsummen: {0:X2}  {1:X2}", crcIst1, crcIst2);
+                //Tools.WriteLine("Prüfsummen: {0:X2}  {1:X2}", crcIst1, crcIst2);
                 stm.ReadTimeout = 1000;
                 int k = stm.Read(recBuf, 0, recBuf.Length);  //todo hier noch timeout einbauen und behandeln
                 recBuf = recBuf.Take(k).ToArray();
 
-                //Console.WriteLine(Tools.ToString(recBuf));
+                //Tools.WriteLine(Tools.ToString(recBuf));
                 //for (int i = 0; i < k; i++)
-                //    Console.Write("{0:X2} ",recBuf[i]);
+                //    Tools.Write("{0:X2} ",recBuf[i]);
 
                 tcpclnt.Close();
             }
 
             catch (Exception e)
             {
-                Console.WriteLine("Error..... " + e.StackTrace);
+                Tools.WriteLine("Error..... " + e.StackTrace);
             }
             return recBuf;
         }
@@ -354,8 +355,8 @@ namespace WS980
 
         private byte[] getValues(byte[] receiveBytes, ValueType valueType)
         {
-            WriteDebugData(receiveBytes, valueType);
-            //Console.WriteLine("\n{0}: {1} {2}\n", valueType, BitConverter.ToString(receiveBytes), Encoding.ASCII.GetString(receiveBytes));
+            //WriteDebugData(receiveBytes, valueType);
+            //Tools.WriteLine("\n{0}: {1} {2}\n", valueType, BitConverter.ToString(receiveBytes), Encoding.ASCII.GetString(receiveBytes));
             if (receiveBytes[0] != 0xFF) return null;
             if (receiveBytes[1] != 0xFF) return null;
             if (valueType == ValueType.version)
@@ -370,15 +371,15 @@ namespace WS980
                 int idxCrc = receiveBytes.Length - 2;
                 byte crcIst1 = Tools.calcChecksum(receiveBytes.Skip(5).Take(receiveBytes.Length - 7));
                 byte crcIst2 = Tools.calcChecksum(receiveBytes.Skip(2).Take(receiveBytes.Length - 3));
-                //Console.WriteLine("Prüfsummen: {0:X2}  {1:X2}",crcIst1,crcIst2  );
+                //Tools.WriteLine("Prüfsummen: {0:X2}  {1:X2}",crcIst1,crcIst2  );
                 if (crcIst1!= receiveBytes[idxCrc])
                 {
-                    Console.WriteLine("1. Prüfsumme falsch CRCIst={0}  CrcSoll={1}\n", crcIst2, receiveBytes[idxCrc]);
+                    Tools.WriteLine("1. Prüfsumme falsch CRCIst={0}  CrcSoll={1}\n", crcIst2, receiveBytes[idxCrc]);
                     return null;
                 }
                 if (crcIst2 != receiveBytes[idxCrc+1])
                 {
-                    Console.WriteLine("2. Prüfsumme falsch CRCIst={0}  CrcSoll={1}\n", crcIst2, receiveBytes[idxCrc+1]);
+                    Tools.WriteLine("2. Prüfsumme falsch CRCIst={0}  CrcSoll={1}\n", crcIst2, receiveBytes[idxCrc+1]);
                     return null;
                 }
                 // Befehl prüfen
@@ -406,20 +407,17 @@ namespace WS980
         {
             int deltaIdx = 0;
             int dataIdx = receiveBytes[idx];
+
             idx++;
             if (valueType == ValueType.dayMax | valueType == ValueType.dayMin)
             {
-                dataIdx -= 0x40;
-                deltaIdx += 2;  // hier ist die Zeit noch zusätzlich angegeben
-            }
-
-            if (!WS980DataItemDef.dataItemList.ContainsKey(dataIdx))
-            {
-                Console.WriteLine("SensorNo {0} nicht definiert", dataIdx);
-                return -1;
+                dataIdx -= 0x40;    // wenn die Zeit enthalten ist, ist der Index um 0x40 größer
+                deltaIdx += 2;      // hier ist die Zeit noch zusätzlich angegeben
             }
            
             WS980Sensor sensor = GetSensor(dataIdx);    // sensor finden oder neu anlegen
+            if (sensorList == null) return -1;
+
             deltaIdx += sensor.ItemDef.Length;
             sensor?.UpdateValue(receiveBytes.Skip(idx).Take(deltaIdx), valueType);
             idx += deltaIdx;
@@ -428,7 +426,12 @@ namespace WS980
 
         private WS980Sensor GetSensor(int dataIdx)
         {
-            if (!WS980DataItemDef.dataItemList.ContainsKey(dataIdx)) return null ;
+            if (!WS980DataItemDef.dataItemList.ContainsKey(dataIdx))
+            {
+                Trace.WriteLine("Sensor mit der ID "+dataIdx+" nicht definiert");
+                return null ;
+            }
+
             var itemDef = WS980DataItemDef.dataItemList[dataIdx];
 
             if (sensorList.ContainsKey(dataIdx)) return sensorList[dataIdx];    // existiert
@@ -439,7 +442,7 @@ namespace WS980
             return sensor;
         }
 
-        internal string ToDataLine()
+        internal string GetAllActualValues()
         {
             string erg = DateTime.Now.ToString()+";";
             foreach (var sensor in sensorList.Values)
@@ -451,6 +454,11 @@ namespace WS980
 
         public byte[] ReadEprom(ushort adr, byte size)
         {
+            if (size>56)
+            {
+                Trace.WriteLine("Size of "+ size.ToString() + " is too large in ReadEprom. max is 56");
+                return null;
+            }
             var bef = GetReadEpromArrayBef(adr, size);
             var answer = getAnswer(bef);
             return answer.Skip(9).Take(size).ToArray();
@@ -482,7 +490,6 @@ namespace WS980
             arr[3] = (byte)(size >> 8);
             arr[4] = (byte)(size & 0xFF);
             arr[5] = (byte)0x03;    // write Eprom
-            //arr[4] = (byte)(arr.Length - 2);
             arr[6] = (byte)(adr & 0xFF);
             arr[7] = (byte)(adr >> 8);
             arr[8] = (byte)dataArr.Length;
