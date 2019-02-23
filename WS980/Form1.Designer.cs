@@ -33,6 +33,8 @@
             this.tBOut = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.textBox1 = new System.Windows.Forms.TextBox();
+            this.btnClearHistory = new System.Windows.Forms.Button();
+            this.btnClearMaxMinDay = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button1
@@ -70,11 +72,33 @@
             this.textBox1.TabIndex = 2;
             this.textBox1.Text = "23";
             // 
+            // btnClearHistory
+            // 
+            this.btnClearHistory.Location = new System.Drawing.Point(577, 13);
+            this.btnClearHistory.Name = "btnClearHistory";
+            this.btnClearHistory.Size = new System.Drawing.Size(75, 23);
+            this.btnClearHistory.TabIndex = 3;
+            this.btnClearHistory.Text = "ClearHistory";
+            this.btnClearHistory.UseVisualStyleBackColor = true;
+            this.btnClearHistory.Click += new System.EventHandler(this.btnClearHistory_Click);
+            // 
+            // btnClearMaxMinDay
+            // 
+            this.btnClearMaxMinDay.Location = new System.Drawing.Point(454, 13);
+            this.btnClearMaxMinDay.Name = "btnClearMaxMinDay";
+            this.btnClearMaxMinDay.Size = new System.Drawing.Size(105, 23);
+            this.btnClearMaxMinDay.TabIndex = 4;
+            this.btnClearMaxMinDay.Text = "ClearMaxMinDay";
+            this.btnClearMaxMinDay.UseVisualStyleBackColor = true;
+            this.btnClearMaxMinDay.Click += new System.EventHandler(this.btnClearMaxMinDay_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(798, 477);
+            this.Controls.Add(this.btnClearMaxMinDay);
+            this.Controls.Add(this.btnClearHistory);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.tBOut);
             this.Controls.Add(this.button1);
@@ -92,6 +116,8 @@
         private System.Windows.Forms.TextBox tBOut;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Button btnClearHistory;
+        private System.Windows.Forms.Button btnClearMaxMinDay;
     }
 }
 

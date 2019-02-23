@@ -11,6 +11,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
+// todo:  TimeSync funktioniert noch nicht
+// todo:  Befehl 0x=A PARAM Changed: untersuchen
+// todo:  Befehl 0x=C READ_PARAM : untersuchen
+// todo:  EPROM 0x0 bis 0x260 untersuchen
+
 namespace WS980
 {
     public partial class Form1 : Form
@@ -24,8 +30,14 @@ namespace WS980
             //timer1.Start();
         }
 
+        byte size = 0xf5;
         private void button1_Click(object sender, EventArgs e)
         {
+            //ws980.CompareEpromStart();
+            //return;
+            DateTime time = new DateTime(2011, 1, 1, 12, 12, 12);
+            var erg = ws980.SetTime(time);
+
             ws980.getData();
             tBOut.AppendText(ws980.Version + Environment.NewLine);
             foreach (var sensor in ws980.SensorList.Values)
@@ -34,7 +46,7 @@ namespace WS980
             }
             tBOut.AppendText("---------------------------" + Environment.NewLine);
 
-            //ws980.getHistory();
+            ws980.getHistory();
         }
 
 
@@ -66,6 +78,16 @@ namespace WS980
             File.AppendAllText(CsvFileName,v + Environment.NewLine);
         }
 
+        private void btnClearHistory_Click(object sender, EventArgs e)
+        {
+            var erg = ws980.ClearAllHistory();
+            Tools.WriteLine("Ergebnis von ClearAllHistory: {0}", erg);
+        }
 
+        private void btnClearMaxMinDay_Click(object sender, EventArgs e)
+        {
+            var erg = ws980.ClearMaxMinDay();
+            Tools.WriteLine("Ergebnis von ClearMaxMinDay: {0}", erg);
+        }
     }
 }

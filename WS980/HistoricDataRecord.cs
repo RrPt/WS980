@@ -35,7 +35,8 @@ namespace WS980
             RainTotal = (byteRecord[4] + 256 * byteRecord[5] + (Tools.CheckBitSet(byteRecord[0], 3) ? 256*256 : 0)) /10.0f;
             if(Tools.CheckBitSet(byteRecord[0], 3))
             {
-                // todo Rain overflow
+                // todo Rain overflow behandeln
+                Tools.WriteLine("Rain overflow");
             }
             HumidityIn = byteRecord[6];
             HumidityOut = byteRecord[7];
