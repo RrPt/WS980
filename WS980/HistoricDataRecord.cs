@@ -33,7 +33,7 @@ namespace WS980
             Wind = (byteRecord[2] + (Tools.CheckBitSet(byteRecord[0], 1) ? 256 : 0))/10f;
             Gust = (byteRecord[3] + (Tools.CheckBitSet(byteRecord[0], 2) ? 256 : 0))/10f;
             RainTotal = (byteRecord[4] + 256 * byteRecord[5] + (Tools.CheckBitSet(byteRecord[0], 3) ? 256*256 : 0)) /10.0f;
-            if(Tools.CheckBitSet(byteRecord[0], 3))
+            if(Tools.CheckBitSet(byteRecord[0], 4))
             {
                 // todo Rain overflow behandeln
                 Tools.WriteLine("Rain overflow");

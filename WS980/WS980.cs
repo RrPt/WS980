@@ -47,7 +47,7 @@ namespace WS980
 
         public override string ToString()
         {
-            if (ok) return IP + ":" + Port + " (" + MAC + ")";
+            if (ok) return Name +"  "+ IP + ":" + Port + " (" + MAC + ")";
             else return "<no ConnectionData>";
         }
     }
@@ -101,7 +101,7 @@ namespace WS980
             while (adr <= lastAdr)
             {
                 int page = (adr - firstAdr) / 8;
-                if (pageFlags[page] <= 0x20)
+                if (pageFlags[page] < 0x20)
                 {
                     int retry = 0;
                     bool ok = false;
@@ -110,7 +110,7 @@ namespace WS980
                         try
                         {
                             var arr = ReadEprom(adr, blockSize);
-
+                            //Tools.WriteLine("TableData[{0}]: {1}", page, Tools.ToString(arr));
                             TableDataItem tableDataItem = new TableDataItem();
                             tableDataItem.pageNo = page;
                             tableDataItem.startDataAdr = (ushort)(0x0640 + page * 18 * 32);
@@ -270,9 +270,20 @@ namespace WS980
             cd.IP = String.Format("{0}.{1}.{2}.{3}", receiveBytes[11], receiveBytes[12], receiveBytes[13], receiveBytes[14]);
             // Port 15-16
             cd.Port = 256 * (int)receiveBytes[15] + receiveBytes[16];
-            // Name 17..
-            cd.Name = "?";
+            // NameLen 17
+            int nameLen = (int)receiveBytes[17];
+            // Name 18.. 37 
+            cd.Name = Tools.ByteArrayToString(receiveBytes.Skip(18).Take(nameLen).ToArray());
+            // CRC 38
+            byte crcIst = Tools.calcChecksum(receiveBytes, 2, receiveBytes.Length - 2);
+            if (crcIst!=receiveBytes[18+nameLen])
+            {
+                Tools.WriteLine("Prüfsumme falsch");
+                return cd;
+            }
             cd.ok = true;
+            string dbg = Tools.ToString(receiveBytes,"0x{0:X2} ");
+            string dbgStr = Tools.ByteArrayToString(receiveBytes);
             return cd;
         }
         #endregion
@@ -293,24 +304,6 @@ namespace WS980
             Tools.WriteLine("MIN" + Tools.ToString(getValues(getAnswer(befMinValues), ValueType.min)));
             Tools.WriteLine("DAX" + Tools.ToString(getValues(getAnswer(befDayMaxValues), ValueType.dayMax)));
             Tools.WriteLine("DIN" + Tools.ToString(getValues(getAnswer(befDayMinValues), ValueType.dayMin)));
-
-            //byte[] bef;
-            //byte[] erg;
-            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 13, 0x01, 19, 2, 16,17,30,00, 1, 0x82, 0x18 };  // 
-            //bef[bef.Length - 2] = Tools.calcChecksum(bef.Skip(5).Take(bef.Length - 7));
-            //bef[bef.Length - 1] = Tools.calcChecksum(bef.Skip(2).Take(bef.Length - 3));
-            //erg = getAnswer(bef);
-
-
-            // write
-
-            //byte[] dta = new byte[] { lcdContrast };
-            //bef = Tools.GetWriteEpromArray(0x1b,dta );
-            //erg = getData(bef);
-
-            //bef = Tools.GetReadEpromArray(0x1b, 1);
-            //erg = getData(bef);
-            //Tools.WriteLine("lcd={0}",erg[9]);
 
             return;
         }
@@ -349,6 +342,8 @@ namespace WS980
 
         private byte[] getValues(byte[] receiveBytes, ValueType valueType)
         {
+            string dbg = Tools.ToString(receiveBytes, "0x{0:X2} ");
+            string dbgStr = Tools.ByteArrayToString(receiveBytes);
             //WriteDebugData(receiveBytes, valueType);
             //Tools.WriteLine("\n{0}: {1} {2}\n", valueType, BitConverter.ToString(receiveBytes), Encoding.ASCII.GetString(receiveBytes));
             if (receiveBytes[0] != 0xFF) return null;
@@ -414,6 +409,10 @@ namespace WS980
 
             deltaIdx += sensor.ItemDef.Length;
             sensor?.UpdateValue(receiveBytes.Skip(idx).Take(deltaIdx), valueType);
+            // todo debugausgabe
+            Console.WriteLine("{0}  {1}  {2}  Index des Sensors {2} = {3}  0x{2:X2}",idx-1,1,dataIdx,sensor.ItemDef.Name);
+            Console.WriteLine("{0}  {1}  {2}{5}  Wert {3} in {6} {5}    {4}", idx, deltaIdx, sensor.ActualValue, sensor.ItemDef.Name, Tools.ToString(receiveBytes.Skip(idx).Take(deltaIdx).ToArray(), "0x{0:X2} "), sensor.ItemDef.Unit, sensor.ItemDef.Scale);
+
             idx += deltaIdx;
             return idx;
         }
@@ -457,6 +456,25 @@ namespace WS980
             var answer = getAnswer(bef);
             if (answer == null) return null;
             return answer.Skip(9).Take(size).ToArray();
+        }
+
+        public bool WriteEprom(ushort adr, byte[] data)
+        {
+            if (data.Length > 19)    // maximum empirisch bestimmt
+            {
+                Tools.WriteLine("Size of data " + data.Length.ToString() + " is too large in WriteEprom. max is 19");
+                return false;
+            }
+            var bef = GetWriteEpromArrayBef(adr, data);
+            var answer = getAnswer(bef);
+
+            // todo debugcode
+            string dbgBef = Tools.ToString(bef, "0x{0:X2} ");
+            string dbgAnt = Tools.ToString(answer, "0x{0:X2} ");
+            Console.WriteLine("{0} --> \n{1}\n",dbgBef,dbgAnt);
+
+            if (answer == null) return false;
+            return true;
         }
 
         internal bool ClearMaxMinDay()

@@ -16,16 +16,17 @@ namespace WS980
             return sb.ToString();
         }
 
-        internal static byte calcChecksum(IEnumerable<byte> arr)
+
+        internal static byte calcChecksum(IEnumerable<byte> arr,int start=0, int end = int.MaxValue)
         {
             byte sum = 0;
-            for (int i = 0; i < arr.Count<byte>(); i++)
+            if (end >= arr.Count<byte>()) end = arr.Count<byte>()-1;
+            for (int i = start; i <= end ; i++)
             {
                 sum += arr.ElementAt(i);
             }
             return sum;
         }
-
 
 
         internal static byte LoNibble(byte v)
@@ -74,6 +75,18 @@ namespace WS980
         public static void WriteLine(string txt)
         {
             Trace.WriteLine(txt);
+        }
+
+        public static byte[] StringToByteArray(string str)
+        {
+            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+            return enc.GetBytes(str);
+        }
+
+        public static string ByteArrayToString(byte[] arr)
+        {
+            System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+            return enc.GetString(arr);
         }
     }
 }

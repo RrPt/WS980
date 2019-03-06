@@ -35,6 +35,7 @@
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.btnClearHistory = new System.Windows.Forms.Button();
             this.btnClearMaxMinDay = new System.Windows.Forms.Button();
+            this.btnGetHistory = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button1
@@ -92,11 +93,22 @@
             this.btnClearMaxMinDay.UseVisualStyleBackColor = true;
             this.btnClearMaxMinDay.Click += new System.EventHandler(this.btnClearMaxMinDay_Click);
             // 
+            // btnGetHistory
+            // 
+            this.btnGetHistory.Location = new System.Drawing.Point(373, 13);
+            this.btnGetHistory.Name = "btnGetHistory";
+            this.btnGetHistory.Size = new System.Drawing.Size(75, 23);
+            this.btnGetHistory.TabIndex = 5;
+            this.btnGetHistory.Text = "Get History";
+            this.btnGetHistory.UseVisualStyleBackColor = true;
+            this.btnGetHistory.Click += new System.EventHandler(this.btnGetHistory_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(798, 477);
+            this.Controls.Add(this.btnGetHistory);
             this.Controls.Add(this.btnClearMaxMinDay);
             this.Controls.Add(this.btnClearHistory);
             this.Controls.Add(this.textBox1);
@@ -118,6 +130,7 @@
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Button btnClearHistory;
         private System.Windows.Forms.Button btnClearMaxMinDay;
+        private System.Windows.Forms.Button btnGetHistory;
     }
 }
 

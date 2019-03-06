@@ -35,8 +35,30 @@ namespace WS980
         {
             //ws980.CompareEpromStart();
             //return;
-            DateTime time = new DateTime(2011, 1, 1, 12, 12, 12);
-            var erg = ws980.SetTime(time);
+            //DateTime time = new DateTime(2011, 1, 1, 12, 12, 12);
+            //var erg = ws980.SetTime(time);
+
+            // Test Zeitsync
+            //byte[] bef;
+            //byte[] erg;
+            //byte[] bef = { 0xff, 0xff, 0x0b, 0x00, 13, 0x01, 19, 2, 16,17,30,00, 1, 0x82, 0x18 };  // 
+            //bef[bef.Length - 2] = Tools.calcChecksum(bef.Skip(5).Take(bef.Length - 7));
+            //bef[bef.Length - 1] = Tools.calcChecksum(bef.Skip(2).Take(bef.Length - 3));
+            //erg = getAnswer(bef);
+
+
+            // write Eprom Test
+            //ushort adr = 0x8123;
+            //var vor = ws980.ReadEprom(adr, 10);
+            //byte[] dta = new byte[10];
+            //bool ok = ws980.WriteEprom(adr, dta);
+            //var nach = ws980.ReadEprom(adr, 10);
+            //Console.WriteLine("{0} -> {1}", Tools.ToString(vor), Tools.ToString(nach));
+
+            // Read Eprom Test
+            //ushort adr = 0x8123;
+            //var vor = ws980.ReadEprom(adr, 10);
+            //Console.WriteLine("Read: {0} ", Tools.ToString(vor));
 
             ws980.getData();
             tBOut.AppendText(ws980.Version + Environment.NewLine);
@@ -46,7 +68,7 @@ namespace WS980
             }
             tBOut.AppendText("---------------------------" + Environment.NewLine);
 
-            ws980.getHistory();
+            //ws980.getHistory();
         }
 
 
@@ -80,6 +102,7 @@ namespace WS980
 
         private void btnClearHistory_Click(object sender, EventArgs e)
         {
+            throw new Exception("Funktion gesperrt");
             var erg = ws980.ClearAllHistory();
             Tools.WriteLine("Ergebnis von ClearAllHistory: {0}", erg);
         }
@@ -88,6 +111,11 @@ namespace WS980
         {
             var erg = ws980.ClearMaxMinDay();
             Tools.WriteLine("Ergebnis von ClearMaxMinDay: {0}", erg);
+        }
+
+        private void btnGetHistory_Click(object sender, EventArgs e)
+        {
+            ws980.getHistory();
         }
     }
 }
