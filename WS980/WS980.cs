@@ -57,6 +57,7 @@ namespace WS980
         private string version = "V?";
         // List of  Sensors
         private SortedList<int, WS980Sensor> sensorList = new SortedList<int, WS980Sensor>();
+        // Historic Data
         private byte[] pageFlags = new byte[111];
         private TableDataItem[] tableData = new TableDataItem[111];
         private List<HistoricDataRecord> historicDataRecordList = new List<HistoricDataRecord>();
@@ -136,6 +137,13 @@ namespace WS980
 
                 adr += blockSize;
             };
+        }
+
+        internal WS980Parameter getParameter()
+        {
+            WS980Parameter para = new WS980Parameter(this);
+            
+            return para;
         }
 
         private void getPageFlags()
@@ -380,6 +388,10 @@ namespace WS980
                 while (idx < receiveBytes.Length - 2)
                 {
                     idx = getNextDataItem(idx, receiveBytes, valueType);
+                    if (idx<0)
+                    {
+                        return null;
+                    }
                 }
             }
             return receiveBytes;
@@ -405,7 +417,7 @@ namespace WS980
             }
            
             WS980Sensor sensor = GetSensor(dataIdx);    // sensor finden oder neu anlegen
-            if (sensorList == null) return -1;
+            if (sensor == null) return -1;              // keine Sensordefinition vorhanden --> Abbruch
 
             deltaIdx += sensor.ItemDef.Length;
             sensor?.UpdateValue(receiveBytes.Skip(idx).Take(deltaIdx), valueType);
@@ -419,19 +431,15 @@ namespace WS980
 
         private WS980Sensor GetSensor(int dataIdx)
         {
-            if (!WS980DataItemDef.dataItemList.ContainsKey(dataIdx))
+            if (sensorList.ContainsKey(dataIdx)) return sensorList[dataIdx];    // vorhandenen Sensor zurückgeben
+            if (!WS980DataItemDef.dataItemList.ContainsKey(dataIdx))            // prüfen ob Definition vorhanden
             {
-                Tools.WriteLine("Sensor mit der ID "+dataIdx+" nicht definiert");
-                return null ;
+                Tools.WriteLine("Sensor mit der ID " + dataIdx + " nicht definiert");
+                return null;
             }
-
-            var itemDef = WS980DataItemDef.dataItemList[dataIdx];
-
-            if (sensorList.ContainsKey(dataIdx)) return sensorList[dataIdx];    // existiert
-            // neu anlegen
-
-            var sensor = new WS980Sensor(itemDef);
-            sensorList.Add(dataIdx, sensor);
+            var itemDef = WS980DataItemDef.dataItemList[dataIdx];               // definition abrufen
+            var sensor = new WS980Sensor(itemDef);                              // sensor neu anlegen
+            sensorList.Add(dataIdx, sensor);                                    // und in Liste aufnehmen
             return sensor;
         }
 
@@ -445,6 +453,12 @@ namespace WS980
             return erg;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="adr">0 .. 65535</param>
+        /// <param name="size">0 .. 246</param>
+        /// <returns></returns>
         public byte[] ReadEprom(ushort adr, byte size)
         {
             if (size > 0xf6)    // maximum empirisch bestimmt
@@ -455,7 +469,9 @@ namespace WS980
             var bef = GetReadEpromArrayBef(adr, size);
             var answer = getAnswer(bef);
             if (answer == null) return null;
-            return answer.Skip(9).Take(size).ToArray();
+            var data = answer.Skip(9).Take(size).ToArray();
+            Tools.WriteLine("[{0:X4}..{1:X4}]: {2}", adr, adr+size-1, Tools.ToString(data));
+            return data;
         }
 
         public bool WriteEprom(ushort adr, byte[] data)
@@ -584,33 +600,39 @@ namespace WS980
         #endregion
 
         #region CompareEprom
-        const int len = 0x260;
+        const int len = 0x259;
         byte[] oldEpromData = new byte[len];
-        public void CompareEpromStart()
+        public string CompareEpromStart()
         {
+            StringBuilder sb = new StringBuilder();
             byte[] newEpromData = GetEpromStart();
             for (int i = 0; i < len; i++)
             {
                 if (newEpromData[i] != oldEpromData[i])
                 {
-                    Tools.WriteLine("changed:[{0:X4}]  {1:X2}->{2:X2}", i, oldEpromData[i], newEpromData[i]);
+                    string txt = String.Format("changed:[{0:X4}]  {1:X2}->{2:X2}  {3:B2}->{4:B2}  ", i, oldEpromData[i], newEpromData[i],
+                                                                                  Convert.ToString(oldEpromData[i],2), Convert.ToString(newEpromData[i], 2));
+                    Tools.WriteLine(txt);
+                    sb.AppendLine(txt);
                 }
             }
 
             oldEpromData = newEpromData;
             Tools.WriteLine("ok");
+            sb.AppendLine();
+            return sb.ToString();
         }
 
-        private byte[] GetEpromStart()
+        public byte[] GetEpromStart()
         {
             byte[] epromData = new byte[len];
             byte maxLen = 0x20;
             for (ushort i = 0; i < len; i += maxLen)
             {
-                var arr = ReadEprom(i, maxLen);
+                var arr = ReadEprom(i, maxLen); //todo auf null prüfen
                 for (int j = 0; j < maxLen; j++)
                 {
-                    epromData[i + j] = arr[j];
+                    if (i+j<len)  epromData[i + j] = arr[j];
                 }
             };
             return epromData;

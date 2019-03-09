@@ -36,6 +36,9 @@
             this.btnClearHistory = new System.Windows.Forms.Button();
             this.btnClearMaxMinDay = new System.Windows.Forms.Button();
             this.btnGetHistory = new System.Windows.Forms.Button();
+            this.btnGetPara = new System.Windows.Forms.Button();
+            this.btnCompareEprom = new System.Windows.Forms.Button();
+            this.btnClr = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button1
@@ -57,6 +60,7 @@
             this.tBOut.Location = new System.Drawing.Point(12, 42);
             this.tBOut.Multiline = true;
             this.tBOut.Name = "tBOut";
+            this.tBOut.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.tBOut.Size = new System.Drawing.Size(774, 423);
             this.tBOut.TabIndex = 1;
             // 
@@ -103,11 +107,44 @@
             this.btnGetHistory.UseVisualStyleBackColor = true;
             this.btnGetHistory.Click += new System.EventHandler(this.btnGetHistory_Click);
             // 
+            // btnGetPara
+            // 
+            this.btnGetPara.Location = new System.Drawing.Point(273, 13);
+            this.btnGetPara.Name = "btnGetPara";
+            this.btnGetPara.Size = new System.Drawing.Size(94, 23);
+            this.btnGetPara.TabIndex = 6;
+            this.btnGetPara.Text = "Get Parameter";
+            this.btnGetPara.UseVisualStyleBackColor = true;
+            this.btnGetPara.Click += new System.EventHandler(this.btnGetPara_Click);
+            // 
+            // btnCompareEprom
+            // 
+            this.btnCompareEprom.Location = new System.Drawing.Point(173, 13);
+            this.btnCompareEprom.Name = "btnCompareEprom";
+            this.btnCompareEprom.Size = new System.Drawing.Size(94, 23);
+            this.btnCompareEprom.TabIndex = 7;
+            this.btnCompareEprom.Text = "Verg. EPROM";
+            this.btnCompareEprom.UseVisualStyleBackColor = true;
+            this.btnCompareEprom.Click += new System.EventHandler(this.btnCompareEprom_Click);
+            // 
+            // btnClr
+            // 
+            this.btnClr.Location = new System.Drawing.Point(94, 13);
+            this.btnClr.Name = "btnClr";
+            this.btnClr.Size = new System.Drawing.Size(73, 23);
+            this.btnClr.TabIndex = 8;
+            this.btnClr.Text = "CLR";
+            this.btnClr.UseVisualStyleBackColor = true;
+            this.btnClr.Click += new System.EventHandler(this.btnClr_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(798, 477);
+            this.Controls.Add(this.btnClr);
+            this.Controls.Add(this.btnCompareEprom);
+            this.Controls.Add(this.btnGetPara);
             this.Controls.Add(this.btnGetHistory);
             this.Controls.Add(this.btnClearMaxMinDay);
             this.Controls.Add(this.btnClearHistory);
@@ -131,6 +168,9 @@
         private System.Windows.Forms.Button btnClearHistory;
         private System.Windows.Forms.Button btnClearMaxMinDay;
         private System.Windows.Forms.Button btnGetHistory;
+        private System.Windows.Forms.Button btnGetPara;
+        private System.Windows.Forms.Button btnCompareEprom;
+        private System.Windows.Forms.Button btnClr;
     }
 }
 

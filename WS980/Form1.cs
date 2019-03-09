@@ -117,5 +117,26 @@ namespace WS980
         {
             ws980.getHistory();
         }
+
+        private void btnGetPara_Click(object sender, EventArgs e)
+        {
+            var eprom = ws980.GetEpromStart();
+            Tools.WriteByteArray(eprom);
+
+
+            //var para = ws980.getParameter();
+            //tBOut.AppendText(para.GetRawData());
+        }
+
+        private void btnCompareEprom_Click(object sender, EventArgs e)
+        {
+            var txt = ws980.CompareEpromStart();
+            tBOut.AppendText(txt);
+        }
+
+        private void btnClr_Click(object sender, EventArgs e)
+        {
+            tBOut.Clear();
+        }
     }
 }

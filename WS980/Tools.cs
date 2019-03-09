@@ -88,5 +88,20 @@ namespace WS980
             System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
             return enc.GetString(arr);
         }
+
+        internal static void WriteByteArray(byte[] arr)
+        {
+            StringBuilder sb = new StringBuilder();
+            var len = arr.Length;
+            int idx = 0;
+            while (idx<len)
+            {
+                int anz = len - idx;
+                if (anz > 16) anz = 16;
+                sb.AppendLine(String.Format("[0x{0:X4}] {1}",idx,Tools.ToString(arr.Skip(idx).Take(anz).ToArray())));
+                idx += anz;
+            }
+            Tools.WriteLine(sb.ToString());
+        }
     }
 }

@@ -58,6 +58,7 @@
     <Compile Include="Tools.cs" />
     <Compile Include="WS980.cs" />
     <Compile Include="WS980DataItemDef.cs" />
+    <Compile Include="WS980Parameter.cs" />
     <Compile Include="WS980Sensor.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
