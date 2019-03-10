@@ -32,7 +32,6 @@
             this.button1 = new System.Windows.Forms.Button();
             this.tBOut = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.textBox1 = new System.Windows.Forms.TextBox();
             this.btnClearHistory = new System.Windows.Forms.Button();
             this.btnClearMaxMinDay = new System.Windows.Forms.Button();
             this.btnGetHistory = new System.Windows.Forms.Button();
@@ -68,14 +67,6 @@
             // 
             this.timer1.Interval = 60000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(686, 12);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(100, 20);
-            this.textBox1.TabIndex = 2;
-            this.textBox1.Text = "23";
             // 
             // btnClearHistory
             // 
@@ -148,7 +139,6 @@
             this.Controls.Add(this.btnGetHistory);
             this.Controls.Add(this.btnClearMaxMinDay);
             this.Controls.Add(this.btnClearHistory);
-            this.Controls.Add(this.textBox1);
             this.Controls.Add(this.tBOut);
             this.Controls.Add(this.button1);
             this.Name = "Form1";
@@ -164,7 +154,6 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TextBox tBOut;
         private System.Windows.Forms.Timer timer1;
-        private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Button btnClearHistory;
         private System.Windows.Forms.Button btnClearMaxMinDay;
         private System.Windows.Forms.Button btnGetHistory;

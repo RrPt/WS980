@@ -120,12 +120,8 @@ namespace WS980
 
         private void btnGetPara_Click(object sender, EventArgs e)
         {
-            var eprom = ws980.GetEpromStart();
-            Tools.WriteByteArray(eprom);
-
-
-            //var para = ws980.getParameter();
-            //tBOut.AppendText(para.GetRawData());
+            var para = ws980.getParameter();
+            tBOut.AppendText(para.GetRawData());
         }
 
         private void btnCompareEprom_Click(object sender, EventArgs e)
