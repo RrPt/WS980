@@ -118,21 +118,64 @@ namespace WS980
             ws980.getHistory();
         }
 
-        private void btnGetPara_Click(object sender, EventArgs e)
+        private void btnReadPara_Click(object sender, EventArgs e)
         {
-            var para = ws980.getParameter();
-            tBOut.AppendText(para.GetRawData());
+            var para = ws980.ReadParameter();
+            tBOut.AppendText(para.GetRawData() + Environment.NewLine);
+            tBOut.AppendText(para.ToString() + Environment.NewLine);
+
         }
 
         private void btnCompareEprom_Click(object sender, EventArgs e)
         {
             var txt = ws980.CompareEpromStart();
-            tBOut.AppendText(txt);
+            tBOut.AppendText(txt + Environment.NewLine);
         }
 
         private void btnClr_Click(object sender, EventArgs e)
         {
             tBOut.Clear();
+        }
+
+        private void btnWritePara_Click(object sender, EventArgs e)
+        {
+            var erg = ws980.WriteParameter();
+            tBOut.AppendText("WritePara="+erg+Environment.NewLine);
+        }
+
+        private void cBKeyBeep_CheckedChanged(object sender, EventArgs e)
+        {
+            CheckBox cb = (CheckBox)sender;
+            //ws980.Para.KeyBeep = cb.Checked;
+            if (cb.Checked)  ws980.Para.TemperatureUnit = "F";
+            else ws980.Para.TemperatureUnit = "°C";
+        }
+
+        private void btnRead_Click(object sender, EventArgs e)
+        {
+
+            ushort adr = Convert.ToUInt16(tBAdr.Text,16);
+            var wertArr = ws980.ReadEprom(adr, 1);
+            if (wertArr != null && wertArr.Length > 0)
+            {
+                byte wert = wertArr[0];
+                tBWert.Text = String.Format("0x{0:X2}", wert);
+            }
+        }
+
+        private void btnWrite_Click(object sender, EventArgs e)
+        {
+            ushort adr = Convert.ToUInt16(tBAdr.Text, 16);
+            byte wert = Convert.ToByte(tBWert.Text, 16);
+            byte[] wertArr = new byte[1];
+            wertArr[0] = wert;
+            var erg =  ws980.WriteEprom(adr,wertArr);
+            tBOut.AppendText("erg = " + erg.ToString() + Environment.NewLine);
+        }
+
+        private void btnChangeinfo_Click(object sender, EventArgs e)
+        {
+            ws980.ChangedParameter((short)0x0004);
         }
     }
 }

@@ -11,7 +11,17 @@ namespace WS980
         public int Model { get; private set; }
         public byte Version { get; private set; }
         public int ID { get; private set; }
-        public string TemperatureUnit { get; private set; }
+        public string TemperatureUnit
+        {
+            get => _temperatureUnit;
+            set  {
+                _temperatureUnit = value;
+                if (value == "F") Tools.SetBit(ref rawDataDefinitions[0x10], 1,true);
+                else Tools.SetBit(ref rawDataDefinitions[0x10], 1,false); 
+
+            }
+
+        }
         public string PressureUnit { get; private set; }
         public string LightUnit { get; private set; }
         public string WindUnit { get; private set; }
@@ -24,9 +34,23 @@ namespace WS980
         public TemperatureDisplayTyp TempDisplay { get; private set; }
         public string TimeFormatDisplay { get; private set; }
         public bool DstDisplay { get; private set; }
-        public bool KeyBeep { get; private set; }
+        public bool KeyBeep
+        {
+            get => _keyBeep;
+            set
+            {
+                _keyBeep = value;
+                Tools.SetBit(ref rawDataDefinitions[0x14], 7, value);
+            }
+        }
+
+
+
+
 
         private AlarmEnableState alarmEnableState;
+        private bool _keyBeep;
+        private string _temperatureUnit;
 
         public int RainSeasonBegin { get; private set; }
         public int HistoryStoreInterval_s { get; private set; }
@@ -50,6 +74,7 @@ namespace WS980
         public void ReadParameter()
         {
             ReadDataDefinitions();
+            // todo  folgende Funktionen noch implementieren
             //ReadRainIndex();
             //ReadAlarmSettings();
             //ReadTotalMaxMin()
@@ -67,10 +92,10 @@ namespace WS980
         {
             rawDataDefinitions = ws980.ReadEprom(0, 0x35);
             var rdd = rawDataDefinitions;
-            if (rdd[0]!=0x55 & rdd[1]!=0xAA) { Tools.WriteLine("EPROM nicht initialisiert");return false; }
+            if (rdd[0] != 0x55 & rdd[1] != 0xAA) { Tools.WriteLine("EPROM nicht initialisiert"); return false; }
             Model = rdd[2] + rdd[3] * 254;
             Version = rdd[4];
-            ID = rdd[5] + rdd[6] * 256 + rdd[7] * 65536 + rdd[8] * 256* 65536;
+            ID = rdd[5] + rdd[6] * 256 + rdd[7] * 65536 + rdd[8] * 256 * 65536;
             if (Tools.CheckBitSet(rdd[0x10], 1)) TemperatureUnit = "F";
             else TemperatureUnit = "°C";
             if (Tools.CheckBitSet(rdd[0x10], 2)) LightUnit = "fc";
@@ -101,7 +126,7 @@ namespace WS980
             if (Tools.CheckBitSet(rdd[0x13], 0)) PreasureDisplay = PreasureDisplayTyp.abs;
             else PreasureDisplay = PreasureDisplayTyp.rel;
             if (Tools.CheckBitSet(rdd[0x13], 1)) PreasureGraphDurationDisplay = 24;
-            else PreasureGraphDurationDisplay =12;
+            else PreasureGraphDurationDisplay = 12;
             if (Tools.CheckBitSet(rdd[0x13], 2)) WindDisplay = WindDisplayTyp.wind;
             if (Tools.CheckBitSet(rdd[0x13], 3)) WindDisplay = WindDisplayTyp.gust;
             if (Tools.CheckBitSet(rdd[0x13], 4)) WindDisplay = WindDisplayTyp.windDir;
@@ -117,7 +142,7 @@ namespace WS980
 
             KeyBeep = Tools.CheckBitSet(rdd[0x14], 7);
 
-            alarmEnableState = (AlarmEnableState)(rdd[0x15] + rdd[0x16] * 256  + rdd[0x17] * 65536) ;
+            alarmEnableState = (AlarmEnableState)(rdd[0x15] + rdd[0x16] * 256 + rdd[0x17] * 65536);
 
             RainSeasonBegin = rdd[0x18];
 
@@ -125,18 +150,18 @@ namespace WS980
 
             TimeZone = rdd[0x1C];
 
-            InTempOffset =((short) (rdd[0x23] + rdd[0x24] * 256))/10f ;
-            InHumidityOffset =rdd[0x25] ;
+            InTempOffset = ((short)(rdd[0x23] + rdd[0x24] * 256)) / 10f;
+            InHumidityOffset = rdd[0x25];
 
             OutTempOffset = ((short)(rdd[0x26] + rdd[0x27] * 256)) / 10f;
-            OutHumidityOffset = rdd[0x28] ;
+            OutHumidityOffset = rdd[0x28];
 
             AbsPressureOffset = ((short)(rdd[0x29] + rdd[0x2A] * 256)) / 10f;
             RelPressureOffset = ((short)(rdd[0x2B] + rdd[0x2C] * 256)) / 10f;
 
-            WindDirectionOffset = (short)(rdd[0x2D] + rdd[0x2E] * 256)  ;
-            WindFactor = rdd[0x2F]/100f  ;
-            RainfallFactor = rdd[0x30]/100f  ;
+            WindDirectionOffset = (short)(rdd[0x2D] + rdd[0x2E] * 256);
+            WindFactor = rdd[0x2F] / 100f;
+            RainfallFactor = rdd[0x30] / 100f;
 
 
 
@@ -144,9 +169,36 @@ namespace WS980
             return true;
         }
 
+        // todo:  DataDefinitionsToString fehlt noch
+
+        // todo:  SendDataDefinitions to WS980
+        public bool WriteParameter()
+        {
+            WriteDataDefinitions();
+            // todo  folgende Funktionen noch implementieren
+            //WriteRainIndex();
+            //WriteAlarmSettings();
+            //WriteTotalMaxMin()
+            //WriteBarometricDataLast24h();
+
+            // todo einzelnen ergebnisse zusammenfassen und zurückgeben
+            return true;
+        }
+
+        private void WriteDataDefinitions()
+        {
+            ws980.WriteEprom(0, rawDataDefinitions);
+        }
+
         public string GetRawData()
         {
             return Tools.ToString(rawDataDefinitions);
+        }
+
+        public override string ToString()
+        {
+            // todo  zu implementieren
+            return "Beep=" + KeyBeep.ToString();
         }
     }
 

@@ -53,6 +53,7 @@ namespace WS980
     }
     class WS980
     {
+        private WS980Parameter para = null;
         private ConnectionData connectionData;
         private string version = "V?";
         // List of  Sensors
@@ -139,13 +140,15 @@ namespace WS980
             };
         }
 
-        internal WS980Parameter getParameter()
+        internal WS980Parameter ReadParameter()
         {
-            WS980Parameter para = new WS980Parameter(this);
-            
+            para = new WS980Parameter(this);
             return para;
         }
-
+        internal bool WriteParameter()
+        {
+            return para.WriteParameter();
+        }
         private void getPageFlags()
         {
             ushort firstAdr = 0x259;
@@ -168,6 +171,17 @@ namespace WS980
                 adr += blockSize;
 
             };
+        }
+
+
+        /// <summary>
+        /// Parameter im EPROM hat sich geändert
+        /// </summary>
+        /// <param name="v"></param>
+        internal void ChangedParameter(short v)
+        {
+            var bef = GetParamChangedArrayBef(v);
+            var answer = getAnswer(bef);
         }
 
         public bool ClearAllHistory()
@@ -216,6 +230,7 @@ namespace WS980
         internal ConnectionData ConnectionData { get => connectionData; set => connectionData = value; }
         public string Version { get => version; set => version = value; }
         internal SortedList<int, WS980Sensor> SensorList { get => sensorList; set => sensorList = value; }
+        internal WS980Parameter Para { get => para; set => para = value; }
 
         #endregion
 
@@ -479,7 +494,9 @@ namespace WS980
             if (data.Length > 19)    // maximum empirisch bestimmt
             {
                 Tools.WriteLine("Size of data " + data.Length.ToString() + " is too large in WriteEprom. max is 19");
-                return false;
+                var erg1 = WriteEprom(adr, data.Take(19).ToArray());
+                var erg2 = WriteEprom((ushort)(adr + 19), data.Skip(19).ToArray());
+                return erg1 & erg2;
             }
             var bef = GetWriteEpromArrayBef(adr, data);
             var answer = getAnswer(bef);
@@ -606,6 +623,7 @@ namespace WS980
         {
             StringBuilder sb = new StringBuilder();
             byte[] newEpromData = GetEpromStart();
+            if (newEpromData == null) return "no Data received";
             for (int i = 0; i < len; i++)
             {
                 if (newEpromData[i] != oldEpromData[i])
@@ -630,6 +648,7 @@ namespace WS980
             for (ushort i = 0; i < len; i += maxLen)
             {
                 var arr = ReadEprom(i, maxLen); //todo auf null prüfen
+                if (arr == null) return null;
                 for (int j = 0; j < maxLen; j++)
                 {
                     if (i+j<len)  epromData[i + j] = arr[j];

@@ -39,6 +39,12 @@ namespace WS980
             return (byte)(v >>4);
         }
 
+        internal static void SetBit(ref byte b, int bitNo, bool value)
+        {
+            if (value)  b |= (byte)(1 << bitNo);
+            else b &= (byte)~(1 << bitNo);
+        }
+
 
         /// <summary>
         /// Prüft, ob ein angegebenes Bit im Byte gesetzt ist.
