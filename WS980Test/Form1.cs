@@ -10,6 +10,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WS980_NS;
 
 
 // todo:  TimeSync funktioniert noch nicht
@@ -17,7 +18,7 @@ using System.Windows.Forms;
 // todo:  Befehl 0x=C READ_PARAM : untersuchen
 // todo:  EPROM 0x0 bis 0x260 untersuchen
 
-namespace WS980
+namespace WS980Test
 {
     public partial class Form1 : Form
     {

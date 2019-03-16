@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace WS980
+namespace WS980_NS
 {
-    internal class WS980Parameter
+    public class WS980Parameter
     {
         private WS980 ws980;
         private byte[] rawDataDefinitions;
@@ -14,10 +14,11 @@ namespace WS980
         public string TemperatureUnit
         {
             get => _temperatureUnit;
-            set  {
+            set
+            {
                 _temperatureUnit = value;
-                if (value == "F") Tools.SetBit(ref rawDataDefinitions[0x10], 1,true);
-                else Tools.SetBit(ref rawDataDefinitions[0x10], 1,false); 
+                if (value == "F") Tools.SetBit(ref rawDataDefinitions[0x10], 1, true);
+                else Tools.SetBit(ref rawDataDefinitions[0x10], 1, false);
 
             }
 
@@ -202,56 +203,58 @@ namespace WS980
         }
     }
 
-    enum RainDisplayTyp
+    public enum RainDisplayTyp
     {
-        rate,rainEvent,day,week,month,year,total
+        rate, rainEvent, day, week, month, year, total
     }
 
-    enum PreasureDisplayTyp
+    public enum PreasureDisplayTyp
     {
-        rel,  abs
+        rel, abs
     }
-}
-enum WindDisplayTyp
-{
-    wind,
-    gust,
-    windDir
-}
 
-enum TemperatureDisplayTyp
-{
-    windChill,
-    drewPoint,
-    heatIndex
-}
+    public enum WindDisplayTyp
+    {
+        wind,
+        gust,
+        windDir
+    }
 
-[Flags]
-enum AlarmEnableState
-{
-    light_high_alarm    = 0x0001,
-    UVI_high_alarm      = 0x0002,
-    in_temp_high_alarm  = 0x0004,
-    in_temp_low_alarm   = 0x0008,
-    humidity_high_alarm = 0x0010,
-    humidity_low_alarm  = 0x0020,
-    out_temp_high_alarm = 0x0040,
-    out_temp_low_alarm  = 0x0080,
-    out_humidity_high_alarm    = 0x0100 ,
-    out_humidity_low_alarm     = 0x0200 ,
-    ABS_barometric_high_alarm  = 0x0400 ,
-    ABS_barometric_low_alarm   = 0x0800 ,
-    REL_barometric_high_alarm  = 0x1000 ,
-    REL_barometric_low_alarm   = 0x2000 ,
-    wind_high_alarm            = 0x4000 ,
-    gust_wind_high_alarm       = 0x8000 ,
-    wind_chill_low_alarm       = 0x10000 ,
-    dew_point_high_alarm       = 0x20000 ,
-    dew_point_low_alarm        = 0x40000 ,
-    heat_index_high_alarm      = 0x80000 ,
-    rain_rate_high_alarm       = 0x100000 ,
-    rain_day_high_alarm        = 0x200000 ,
-    storm_alarm                = 0x400000 ,
-    flash_flood_alarm          = 0x800000
+    public enum TemperatureDisplayTyp
+    {
+        windChill,
+        drewPoint,
+        heatIndex
+    }
+
+    [Flags]
+    public enum AlarmEnableState
+    {
+        light_high_alarm = 0x0001,
+        UVI_high_alarm = 0x0002,
+        in_temp_high_alarm = 0x0004,
+        in_temp_low_alarm = 0x0008,
+        humidity_high_alarm = 0x0010,
+        humidity_low_alarm = 0x0020,
+        out_temp_high_alarm = 0x0040,
+        out_temp_low_alarm = 0x0080,
+        out_humidity_high_alarm = 0x0100,
+        out_humidity_low_alarm = 0x0200,
+        ABS_barometric_high_alarm = 0x0400,
+        ABS_barometric_low_alarm = 0x0800,
+        REL_barometric_high_alarm = 0x1000,
+        REL_barometric_low_alarm = 0x2000,
+        wind_high_alarm = 0x4000,
+        gust_wind_high_alarm = 0x8000,
+        wind_chill_low_alarm = 0x10000,
+        dew_point_high_alarm = 0x20000,
+        dew_point_low_alarm = 0x40000,
+        heat_index_high_alarm = 0x80000,
+        rain_rate_high_alarm = 0x100000,
+        rain_day_high_alarm = 0x200000,
+        storm_alarm = 0x400000,
+        flash_flood_alarm = 0x800000
+
+    }
 
 }

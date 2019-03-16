@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WS980
+namespace WS980_NS
 {
-    class Tools
+    public class Tools
     {
         public static string ToString(byte[] arr,string fmt = "{0:X2} ")
         {
@@ -17,7 +17,7 @@ namespace WS980
         }
 
 
-        internal static byte calcChecksum(IEnumerable<byte> arr,int start=0, int end = int.MaxValue)
+        public static byte calcChecksum(IEnumerable<byte> arr,int start=0, int end = int.MaxValue)
         {
             byte sum = 0;
             if (end >= arr.Count<byte>()) end = arr.Count<byte>()-1;
@@ -29,17 +29,17 @@ namespace WS980
         }
 
 
-        internal static byte LoNibble(byte v)
+        public static byte LoNibble(byte v)
         {
             return (byte)(v & 0x0F);
         }
 
-        internal static byte HiNibble(byte v)
+        public static byte HiNibble(byte v)
         {
             return (byte)(v >>4);
         }
 
-        internal static void SetBit(ref byte b, int bitNo, bool value)
+        public static void SetBit(ref byte b, int bitNo, bool value)
         {
             if (value)  b |= (byte)(1 << bitNo);
             else b &= (byte)~(1 << bitNo);

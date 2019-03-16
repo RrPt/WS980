@@ -14,16 +14,16 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WS980
+namespace WS980_NS
 {
-    enum ValueType
+    public enum ValueType
     {
         actual, min, max, version,
         dayMax,
         dayMin
     }
 
-    class TableDataItem
+    public class TableDataItem
     {
         public int pageNo;
         public DateTime startTime;
@@ -37,7 +37,7 @@ namespace WS980
         }
     }
 
-    class ConnectionData
+    public class ConnectionData
     {
         public String MAC = "mac";
         public String IP = "ip";
@@ -51,7 +51,8 @@ namespace WS980
             else return "<no ConnectionData>";
         }
     }
-    class WS980
+
+    public class WS980
     {
         private WS980Parameter para = null;
         private ConnectionData connectionData;
@@ -64,7 +65,7 @@ namespace WS980
         private List<HistoricDataRecord> historicDataRecordList = new List<HistoricDataRecord>();
 
         #region Historic Records
-        internal void getHistory()
+        public void getHistory()
         {
             getPageFlags();
             getTableData();
@@ -140,12 +141,12 @@ namespace WS980
             };
         }
 
-        internal WS980Parameter ReadParameter()
+        public WS980Parameter ReadParameter()
         {
             para = new WS980Parameter(this);
             return para;
         }
-        internal bool WriteParameter()
+        public bool WriteParameter()
         {
             return para.WriteParameter();
         }
@@ -178,7 +179,7 @@ namespace WS980
         /// Parameter im EPROM hat sich geändert
         /// </summary>
         /// <param name="v"></param>
-        internal void ChangedParameter(short v)
+        public void ChangedParameter(short v)
         {
             var bef = GetParamChangedArrayBef(v);
             var answer = getAnswer(bef);
@@ -227,10 +228,10 @@ namespace WS980
 
         #region Zugriffsfunktionen
 
-        internal ConnectionData ConnectionData { get => connectionData; set => connectionData = value; }
+        public ConnectionData ConnectionData { get => connectionData; set => connectionData = value; }
         public string Version { get => version; set => version = value; }
-        internal SortedList<int, WS980Sensor> SensorList { get => sensorList; set => sensorList = value; }
-        internal WS980Parameter Para { get => para; set => para = value; }
+        public SortedList<int, WS980Sensor> SensorList { get => sensorList; set => sensorList = value; }
+        public WS980Parameter Para { get => para; set => para = value; }
 
         #endregion
 
@@ -311,7 +312,7 @@ namespace WS980
         }
         #endregion
 
-        internal void getData()
+        public void getData()
         {
             byte[] befVersion =   { 0xff, 0xff, 0x50, 0x03, 0x53 };  // Version
 
@@ -458,7 +459,7 @@ namespace WS980
             return sensor;
         }
 
-        internal string GetAllActualValues()
+        public string GetAllActualValues()
         {
             string erg = DateTime.Now.ToString()+";";
             foreach (var sensor in sensorList.Values)
@@ -510,14 +511,14 @@ namespace WS980
             return true;
         }
 
-        internal bool ClearMaxMinDay()
+        public bool ClearMaxMinDay()
         {
             byte[] bef = GetBefArrayBef(0x09);
             var answer = getAnswer(bef);
             return answer.SequenceEqual(bef);   // wenn alles ok wird der Befehl zurückgesendet
         }
 
-        internal bool SetTime(DateTime time)
+        public bool SetTime(DateTime time)
         {
             byte[] bef = GetSetTimeArrayBef(time);
             var answer = getAnswer(bef);

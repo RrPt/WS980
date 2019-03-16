@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WS980
+namespace WS980_NS
 {
     class HistoricDataRecord
     {

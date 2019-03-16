@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WS980
+namespace WS980_NS
 {
-    internal class WS980DataItemDef
+    public class WS980DataItemDef
     {
         // List of all ItemDefs
         public static SortedList<int, WS980DataItemDef> dataItemList = new SortedList<int, WS980DataItemDef>();

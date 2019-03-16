@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WS980
+namespace WS980_NS
 {
-    class WS980Sensor
+    public class WS980Sensor
     {
         private double? actualValue = null;
         private double? maxValue = null;
