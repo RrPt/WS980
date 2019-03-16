@@ -20,6 +20,7 @@ namespace WS980_NS
         private DateTime time = new DateTime(2019, 1, 1);
         private WS980DataItemDef itemDef;
         private double scale = 1.0;
+        private bool _isValid;
 
         public WS980Sensor(WS980DataItemDef itemDef)
         {
@@ -46,6 +47,7 @@ namespace WS980_NS
         internal WS980DataItemDef ItemDef { get => itemDef; set => itemDef = value; }
         public DateTime? DayMinTime { get => dayMinTime; set => dayMinTime = value; }
         public DateTime? DayMaxTime { get => dayMaxTime; set => dayMaxTime = value; }
+        public bool IsValid { get => Time>DateTime.UtcNow.AddMinutes(-30);  }   
 
         /// <summary>
         /// Gets the Sensordates out of the Byte
@@ -78,6 +80,7 @@ namespace WS980_NS
             {
                 case ValueType.actual:
                     actualValue = val;
+                    time = DateTime.UtcNow;
                     break;
                 case ValueType.min:
                     minValue = val;
@@ -87,7 +90,7 @@ namespace WS980_NS
                     break;
                 case ValueType.dayMin:
                     dayMinValue = val;
-                    dayMinTime = GetTime(dataBytes.Skip(dataBytes.Count()-2));
+                    dayMinTime = GetTime(dataBytes.Skip(dataBytes.Count() - 2));
                     break;
                 case ValueType.dayMax:
                     dayMaxValue = val;
@@ -100,7 +103,7 @@ namespace WS980_NS
 
         private DateTime? GetTime(IEnumerable<byte> timeBytes)
         {
-            DateTime time = DateTime.Now.Date;
+            DateTime time = DateTime.UtcNow.Date;
             time = time.AddHours(timeBytes.ElementAt(0)).AddMinutes(timeBytes.ElementAt(1));
             return time;
         }
@@ -120,7 +123,7 @@ namespace WS980_NS
             int noOfDigAfterDecimalPoint = (int)(0.5 - Math.Log10(scale));
             if (noOfDigAfterDecimalPoint < 0) noOfDigAfterDecimalPoint = 0;
             if (noOfDigAfterDecimalPoint > 6) noOfDigAfterDecimalPoint = 6;
-            string fmt = "{0:0.".PadRight(5 + noOfDigAfterDecimalPoint, '0') + "}" + unit;
+            string fmt = "{0:0.".PadRight(5 + noOfDigAfterDecimalPoint, '0') + "} " + unit;
             return String.Format(fmt, val); ;
         }
 
@@ -131,7 +134,7 @@ namespace WS980_NS
             int[] UvIdxBorders = new int[] { 0, 99, 540, 1000, 1400, 1843, 2292, 2734, 3138, 3648, 4196, 4707, 5209, 5735, 6276, 6778 };
             for (byte i = 0; i < UvIdxBorders.Length; i++)
             {
-                if (value < UvIdxBorders[i])  return (byte)(i - 1);
+                if (value < UvIdxBorders[i]) return (byte)(i - 1);
             }
             return 15;
         }

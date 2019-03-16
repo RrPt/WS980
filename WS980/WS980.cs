@@ -193,7 +193,7 @@ namespace WS980_NS
         }
         #endregion
 
-        #region Konstroktor
+        #region Konstruktor
         public WS980(ConnectionData connectionData)
         {
             this.connectionData = connectionData;
