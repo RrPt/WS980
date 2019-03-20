@@ -11,22 +11,66 @@ namespace WS980_NS
         public int Model { get; private set; }
         public byte Version { get; private set; }
         public int ID { get; private set; }
-        public string TemperatureUnit
+        public TemperatureUnitE TemperatureUnit
         {
             get => _temperatureUnit;
             set
             {
                 _temperatureUnit = value;
-                if (value == "F") Tools.SetBit(ref rawDataDefinitions[0x10], 1, true);
+                if (value == TemperatureUnitE.F) Tools.SetBit(ref rawDataDefinitions[0x10], 1, true);
                 else Tools.SetBit(ref rawDataDefinitions[0x10], 1, false);
-
             }
 
         }
-        public string PressureUnit { get; private set; }
-        public string LightUnit { get; private set; }
-        public string WindUnit { get; private set; }
-        public string RainUnit { get; private set; }
+
+        public PressureUnitE PressureUnit
+        {
+            get => _pressureUnit;
+            set
+            {
+                _pressureUnit = value;
+                Tools.SetBit(ref rawDataDefinitions[0x10], 5, value == PressureUnitE.hPa);
+                Tools.SetBit(ref rawDataDefinitions[0x10], 6, value == PressureUnitE.inHg);
+                Tools.SetBit(ref rawDataDefinitions[0x10], 7, value == PressureUnitE.mmHg);
+            }
+        }
+
+        public LightUnitE LightUnit
+        {
+            get => _lightUnit;
+            set
+            {
+                _lightUnit = value;
+                Tools.SetBit(ref rawDataDefinitions[0x10], 2, value == LightUnitE.fc);
+                Tools.SetBit(ref rawDataDefinitions[0x10], 3, value == LightUnitE.lux);
+                Tools.SetBit(ref rawDataDefinitions[0x10], 4, value == LightUnitE.wpm2);
+            }
+        }
+
+        public WindUnitE WindUnit
+        {
+            get => _windUnit;
+            set
+            {
+                _windUnit = value;
+                Tools.SetBit(ref rawDataDefinitions[0x11], 0, value == WindUnitE.kmph);
+                Tools.SetBit(ref rawDataDefinitions[0x11], 1, value == WindUnitE.mph);
+                Tools.SetBit(ref rawDataDefinitions[0x11], 2, value == WindUnitE.knoten);
+                Tools.SetBit(ref rawDataDefinitions[0x11], 3, value == WindUnitE.mps);
+                Tools.SetBit(ref rawDataDefinitions[0x11], 4, value == WindUnitE.bft);
+            }
+        }
+
+        public RainUnitE RainUnit
+        {
+            get => _rainUnit;
+            set
+            {
+                _rainUnit = value;
+                Tools.SetBit(ref rawDataDefinitions[0x11], 5, value == RainUnitE.inch);
+            }
+        }
+
         public string EarthPart { get; private set; }
         public RainDisplayTyp RainDisplay { get; private set; }
         public PreasureDisplayTyp PreasureDisplay { get; private set; }
@@ -51,7 +95,11 @@ namespace WS980_NS
 
         private AlarmEnableState alarmEnableState;
         private bool _keyBeep;
-        private string _temperatureUnit;
+        private TemperatureUnitE _temperatureUnit;
+        private PressureUnitE _pressureUnit;
+        private LightUnitE _lightUnit;
+        private WindUnitE _windUnit;
+        private RainUnitE _rainUnit;
 
         public int RainSeasonBegin { get; private set; }
         public int HistoryStoreInterval_s { get; private set; }
@@ -97,22 +145,22 @@ namespace WS980_NS
             Model = rdd[2] + rdd[3] * 254;
             Version = rdd[4];
             ID = rdd[5] + rdd[6] * 256 + rdd[7] * 65536 + rdd[8] * 256 * 65536;
-            if (Tools.CheckBitSet(rdd[0x10], 1)) TemperatureUnit = "F";
-            else TemperatureUnit = "°C";
-            if (Tools.CheckBitSet(rdd[0x10], 2)) LightUnit = "fc";
-            if (Tools.CheckBitSet(rdd[0x10], 3)) LightUnit = "lux";
-            if (Tools.CheckBitSet(rdd[0x10], 4)) LightUnit = "w/m2";
-            if (Tools.CheckBitSet(rdd[0x10], 5)) PressureUnit = "hpa";
-            if (Tools.CheckBitSet(rdd[0x10], 6)) PressureUnit = "inHg";
-            if (Tools.CheckBitSet(rdd[0x10], 7)) PressureUnit = "mmHg";
+            if (Tools.CheckBitSet(rdd[0x10], 1)) TemperatureUnit = TemperatureUnitE.F;
+            else TemperatureUnit = TemperatureUnitE.C;
+            if (Tools.CheckBitSet(rdd[0x10], 2)) LightUnit = LightUnitE.fc;
+            if (Tools.CheckBitSet(rdd[0x10], 3)) LightUnit = LightUnitE.lux;
+            if (Tools.CheckBitSet(rdd[0x10], 4)) LightUnit = LightUnitE.wpm2;
+            if (Tools.CheckBitSet(rdd[0x10], 5)) PressureUnit = PressureUnitE.hPa;
+            if (Tools.CheckBitSet(rdd[0x10], 6)) PressureUnit = PressureUnitE.inHg;
+            if (Tools.CheckBitSet(rdd[0x10], 7)) PressureUnit = PressureUnitE.mmHg;
 
-            if (Tools.CheckBitSet(rdd[0x11], 0)) WindUnit = "km/h";
-            if (Tools.CheckBitSet(rdd[0x11], 1)) WindUnit = "mp";
-            if (Tools.CheckBitSet(rdd[0x11], 2)) WindUnit = "knots";
-            if (Tools.CheckBitSet(rdd[0x11], 3)) WindUnit = "m/s";
-            if (Tools.CheckBitSet(rdd[0x11], 4)) WindUnit = "bft";
-            if (Tools.CheckBitSet(rdd[0x11], 5)) RainUnit = "inch";
-            else RainUnit = "mm";
+            if (Tools.CheckBitSet(rdd[0x11], 0)) WindUnit = WindUnitE.kmph;
+            if (Tools.CheckBitSet(rdd[0x11], 1)) WindUnit = WindUnitE.mph;
+            if (Tools.CheckBitSet(rdd[0x11], 2)) WindUnit = WindUnitE.knoten;
+            if (Tools.CheckBitSet(rdd[0x11], 3)) WindUnit = WindUnitE.mps;
+            if (Tools.CheckBitSet(rdd[0x11], 4)) WindUnit = WindUnitE.bft;
+            if (Tools.CheckBitSet(rdd[0x11], 5)) RainUnit = RainUnitE.inch;
+            else RainUnit = RainUnitE.mm;
             if (Tools.CheckBitSet(rdd[0x11], 6)) EarthPart = "south";
             else EarthPart = "north";
 
@@ -189,6 +237,7 @@ namespace WS980_NS
         private void WriteDataDefinitions()
         {
             ws980.WriteEprom(0, rawDataDefinitions);
+            ws980.WriteEprom(0x18, new byte[] { 1 });
         }
 
         public string GetRawData()
@@ -256,5 +305,30 @@ namespace WS980_NS
         flash_flood_alarm = 0x800000
 
     }
+
+    public enum TemperatureUnitE
+    {
+        C,F
+    }
+
+    public enum PressureUnitE
+    {
+        hPa, inHg, mmHg
+    }
+
+    public enum LightUnitE
+    {
+        fc, lux, wpm2
+    }
+    public enum WindUnitE
+    {
+        mps, kmph, knoten, mph, bft
+    }
+    public enum RainUnitE
+    {
+        mm, inch
+    }
+
+
 
 }

@@ -20,12 +20,12 @@ using WS980_NS;
 
 namespace WS980Test
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         WS980 ws980 = null;
         string CsvFileName = "WS980-data.csv";
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
             //timer1.Start();
@@ -87,6 +87,7 @@ namespace WS980Test
                 return;
             }
             ws980 = new WS980(WS980List[0]);
+            ws980.ReadParameter();
             button1_Click(null, null);
         }
 
@@ -147,9 +148,17 @@ namespace WS980Test
         private void cBKeyBeep_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox cb = (CheckBox)sender;
-            //ws980.Para.KeyBeep = cb.Checked;
-            if (cb.Checked)  ws980.Para.TemperatureUnit = "F";
-            else ws980.Para.TemperatureUnit = "°C";
+            ws980.Para.KeyBeep = cb.Checked;
+            if (cb.Checked)
+            {
+                ws980.Para.TemperatureUnit = TemperatureUnitE.C;
+                ws980.Para.KeyBeep = true;
+            }
+            else
+            {
+                ws980.Para.TemperatureUnit = TemperatureUnitE.F;
+                ws980.Para.KeyBeep = false;
+            }
         }
 
         private void btnRead_Click(object sender, EventArgs e)
@@ -177,6 +186,27 @@ namespace WS980Test
         private void btnChangeinfo_Click(object sender, EventArgs e)
         {
             ws980.ChangedParameter((short)0x0004);
+        }
+
+        private void btnTest_Click(object sender, EventArgs e)
+        {
+            byte[] part1 = new byte[] { 0x29 };//, 0x01, 0x04, 0x47, 0x88 };
+            if (cBKeyBeep.Checked) part1[0] = 0x29;
+            else part1[0] = 0x2B;
+            ws980.WriteEprom(0x10, part1);
+
+            byte[] part2 = new byte[] { 0x05};
+            ws980.WriteEprom(0x18, part2);
+
+            //byte[] part3 = new byte[] { 0x01 };
+            //ws980.WriteEprom(0x1C, part3);
+
+        }
+
+        private void btnSetParameter_Click(object sender, EventArgs e)
+        {
+            var parameterForm = new ParameterForm(ws980);
+            parameterForm.Show();
         }
     }
 }

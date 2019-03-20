@@ -11,6 +11,7 @@ namespace WS980_NS
     {
         public static string ToString(byte[] arr,string fmt = "{0:X2} ")
         {
+            if (arr == null) return "";
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < arr.Length; i++)  sb.AppendFormat(fmt, arr[i]);
             return sb.ToString();

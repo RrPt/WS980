@@ -1,6 +1,6 @@
 ﻿namespace WS980Test
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// Erforderliche Designervariable.
@@ -48,6 +48,8 @@
             this.btnWrite = new System.Windows.Forms.Button();
             this.btnRead = new System.Windows.Forms.Button();
             this.btnChangeinfo = new System.Windows.Forms.Button();
+            this.btnTest = new System.Windows.Forms.Button();
+            this.btnSetParameter = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -63,8 +65,8 @@
             // 
             // tBOut
             // 
-            this.tBOut.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.tBOut.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tBOut.Font = new System.Drawing.Font("Courier New", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tBOut.Location = new System.Drawing.Point(12, 81);
@@ -81,9 +83,9 @@
             // 
             // btnClearHistory
             // 
-            this.btnClearHistory.Location = new System.Drawing.Point(420, 43);
+            this.btnClearHistory.Location = new System.Drawing.Point(390, 39);
             this.btnClearHistory.Name = "btnClearHistory";
-            this.btnClearHistory.Size = new System.Drawing.Size(75, 23);
+            this.btnClearHistory.Size = new System.Drawing.Size(105, 23);
             this.btnClearHistory.TabIndex = 3;
             this.btnClearHistory.Text = "ClearHistory";
             this.btnClearHistory.UseVisualStyleBackColor = true;
@@ -121,19 +123,19 @@
             // 
             // btnCompareEprom
             // 
-            this.btnCompareEprom.Location = new System.Drawing.Point(109, 13);
+            this.btnCompareEprom.Location = new System.Drawing.Point(94, 13);
             this.btnCompareEprom.Name = "btnCompareEprom";
             this.btnCompareEprom.Size = new System.Drawing.Size(94, 23);
             this.btnCompareEprom.TabIndex = 7;
-            this.btnCompareEprom.Text = "Verg. EPROM";
+            this.btnCompareEprom.Text = "Vergl. EPROM";
             this.btnCompareEprom.UseVisualStyleBackColor = true;
             this.btnCompareEprom.Click += new System.EventHandler(this.btnCompareEprom_Click);
             // 
             // btnClr
             // 
-            this.btnClr.Location = new System.Drawing.Point(24, 42);
+            this.btnClr.Location = new System.Drawing.Point(12, 43);
             this.btnClr.Name = "btnClr";
-            this.btnClr.Size = new System.Drawing.Size(73, 23);
+            this.btnClr.Size = new System.Drawing.Size(76, 23);
             this.btnClr.TabIndex = 8;
             this.btnClr.Text = "CLR";
             this.btnClr.UseVisualStyleBackColor = true;
@@ -152,11 +154,11 @@
             // cBKeyBeep
             // 
             this.cBKeyBeep.AutoSize = true;
-            this.cBKeyBeep.Location = new System.Drawing.Point(327, 47);
+            this.cBKeyBeep.Location = new System.Drawing.Point(314, 45);
             this.cBKeyBeep.Name = "cBKeyBeep";
-            this.cBKeyBeep.Size = new System.Drawing.Size(69, 17);
+            this.cBKeyBeep.Size = new System.Drawing.Size(40, 17);
             this.cBKeyBeep.TabIndex = 10;
-            this.cBKeyBeep.Text = "KeyBeep";
+            this.cBKeyBeep.Text = " °C";
             this.cBKeyBeep.UseVisualStyleBackColor = true;
             this.cBKeyBeep.CheckedChanged += new System.EventHandler(this.cBKeyBeep_CheckedChanged);
             // 
@@ -240,11 +242,33 @@
             this.btnChangeinfo.UseVisualStyleBackColor = true;
             this.btnChangeinfo.Click += new System.EventHandler(this.btnChangeinfo_Click);
             // 
+            // btnTest
+            // 
+            this.btnTest.Location = new System.Drawing.Point(511, 39);
+            this.btnTest.Name = "btnTest";
+            this.btnTest.Size = new System.Drawing.Size(75, 23);
+            this.btnTest.TabIndex = 13;
+            this.btnTest.Text = "Test";
+            this.btnTest.UseVisualStyleBackColor = true;
+            this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
+            // 
+            // btnSetParameter
+            // 
+            this.btnSetParameter.Location = new System.Drawing.Point(94, 43);
+            this.btnSetParameter.Name = "btnSetParameter";
+            this.btnSetParameter.Size = new System.Drawing.Size(94, 23);
+            this.btnSetParameter.TabIndex = 14;
+            this.btnSetParameter.Text = "Set Parameter";
+            this.btnSetParameter.UseVisualStyleBackColor = true;
+            this.btnSetParameter.Click += new System.EventHandler(this.btnSetParameter_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(798, 477);
+            this.Controls.Add(this.btnSetParameter);
+            this.Controls.Add(this.btnTest);
             this.Controls.Add(this.btnChangeinfo);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.cBKeyBeep);
@@ -288,6 +312,8 @@
         private System.Windows.Forms.Button btnWrite;
         private System.Windows.Forms.Button btnRead;
         private System.Windows.Forms.Button btnChangeinfo;
+        private System.Windows.Forms.Button btnTest;
+        private System.Windows.Forms.Button btnSetParameter;
     }
 }
 

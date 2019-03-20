@@ -339,8 +339,13 @@ namespace WS980_NS
             try
             {
                 TcpClient tcpclnt = new TcpClient();
-
-                tcpclnt.Connect(connectionData.IP, connectionData.Port);
+                tcpclnt.ReceiveTimeout = 2000;
+                tcpclnt.SendTimeout = 2000;
+                //tcpclnt.Connect(connectionData.IP, connectionData.Port);
+                if (!tcpclnt.ConnectAsync(connectionData.IP, connectionData.Port).Wait(1000))
+                {
+                    return null;
+                }
                 Stream stm = tcpclnt.GetStream();
                 stm.Write(bef, 0, bef.Length);
 
