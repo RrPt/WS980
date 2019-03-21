@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using WS980_NS;
 
-// todo  werte speichern und übertragen
-
 namespace WS980Test
 {
     public partial class ParameterForm : Form
@@ -32,13 +30,25 @@ namespace WS980Test
 
         private void ParameterForm_Load(object sender, EventArgs e)
         {
-            // todo werte laden
+            // Einheiten setzen
             comboBoxTempUnit.SelectedItem = ws980.Para.TemperatureUnit;
             comboBoxPressureUnit.SelectedItem = ws980.Para.PressureUnit;
             comboBoxLightUnit.SelectedItem = ws980.Para.LightUnit;
             comboBoxWindUnit.SelectedItem = ws980.Para.WindUnit;
             comboBoxRainUnit.SelectedItem = ws980.Para.RainUnit;
 
+            // Allgemeine Parameter setzen
+            if (ws980.Para.HistoryStoreInterval_s >= 60)
+            {
+                numericUpDownSekunden.Enabled = false;
+                numericUpDownMinuten.Value = ws980.Para.HistoryStoreInterval_s / 60;
+            }
+            else
+            {
+                numericUpDownSekunden.Enabled = true;
+                numericUpDownSekunden.Value = ws980.Para.HistoryStoreInterval_s ;
+                numericUpDownMinuten.Value = 0;
+            }
         }
 
         private void btnWrite_Click(object sender, EventArgs e)
@@ -79,6 +89,27 @@ namespace WS980Test
         {
             // events erst nach der Initialisierung auswerten
             if (comboBoxRainUnit.IsHandleCreated) ws980.Para.RainUnit = (RainUnitE)comboBoxRainUnit.SelectedItem;
+        }
+
+        private void numericUpDownMinuten_ValueChanged(object sender, EventArgs e)
+        {
+            NumericUpDown min = (NumericUpDown)sender;
+            if (min.Value == 0)
+            {
+                numericUpDownSekunden.Enabled = true;
+                ws980.Para.HistoryStoreInterval_s = (int)numericUpDownSekunden.Value;
+            }
+            else
+            {
+                numericUpDownSekunden.Enabled = false;
+                ws980.Para.HistoryStoreInterval_s = (int)(numericUpDownMinuten.Value*60);
+            }
+        }
+
+        private void numericUpDownSekunden_ValueChanged(object sender, EventArgs e)
+        {
+            ws980.Para.HistoryStoreInterval_s = (int)numericUpDownSekunden.Value;
+
         }
     }
 }

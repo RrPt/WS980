@@ -8,9 +8,12 @@ namespace WS980_NS
         private byte[] rawDataDefinitions;
         private bool UsTimeDisplay;
 
-        public int Model { get; private set; }
-        public byte Version { get; private set; }
-        public int ID { get; private set; }
+        #region Einheiten
+        private TemperatureUnitE _temperatureUnit;
+        private PressureUnitE _pressureUnit;
+        private LightUnitE _lightUnit;
+        private WindUnitE _windUnit;
+        private RainUnitE _rainUnit;
         public TemperatureUnitE TemperatureUnit
         {
             get => _temperatureUnit;
@@ -70,8 +73,11 @@ namespace WS980_NS
                 Tools.SetBit(ref rawDataDefinitions[0x11], 5, value == RainUnitE.inch);
             }
         }
+        #endregion
 
-        public string EarthPart { get; private set; }
+        #region Displayeinstellungen
+        private bool _keyBeep;
+
         public RainDisplayTyp RainDisplay { get; private set; }
         public PreasureDisplayTyp PreasureDisplay { get; private set; }
         public int PreasureGraphDurationDisplay { get; private set; }
@@ -89,21 +95,9 @@ namespace WS980_NS
             }
         }
 
+        #endregion
 
-
-
-
-        private AlarmEnableState alarmEnableState;
-        private bool _keyBeep;
-        private TemperatureUnitE _temperatureUnit;
-        private PressureUnitE _pressureUnit;
-        private LightUnitE _lightUnit;
-        private WindUnitE _windUnit;
-        private RainUnitE _rainUnit;
-
-        public int RainSeasonBegin { get; private set; }
-        public int HistoryStoreInterval_s { get; private set; }
-        public byte TimeZone { get; private set; }
+        #region Kalibrationseinstellungen
         public float InTempOffset { get; private set; }
         public byte InHumidityOffset { get; private set; }
         public float OutTempOffset { get; private set; }
@@ -113,6 +107,39 @@ namespace WS980_NS
         public short WindDirectionOffset { get; private set; }
         public float WindFactor { get; private set; }
         public float RainfallFactor { get; private set; }
+        #endregion
+
+        #region allgemeine Parameter
+        public int Model { get; private set; }
+        public byte Version { get; private set; }
+        public int ID { get; private set; }
+        public string EarthPart { get; private set; }
+        private AlarmEnableState alarmEnableState;
+        private int _historyStoreInterval_s;
+
+        public int RainSeasonBegin { get; private set; }
+        public int HistoryStoreInterval_s
+        {
+            get => _historyStoreInterval_s;
+            set
+            {
+                _historyStoreInterval_s = value;
+                if (value > 48)
+                {
+                    rawDataDefinitions[0x1A] = 0;
+                    rawDataDefinitions[0x19] = (byte)(value/60) ;
+                }
+                else
+                {
+                    rawDataDefinitions[0x1A] = 1;
+                    rawDataDefinitions[0x19] = (byte)value;
+                }
+            }
+        }
+        public byte TimeZone { get; private set; }
+
+
+        #endregion
 
         public WS980Parameter(WS980 wS980)
         {
@@ -122,7 +149,7 @@ namespace WS980_NS
 
         public void ReadParameter()
         {
-            ReadDataDefinitions();
+            bool erg = ReadDataDefinitions();
             // todo  folgende Funktionen noch implementieren
             //ReadRainIndex();
             //ReadAlarmSettings();
@@ -195,7 +222,7 @@ namespace WS980_NS
 
             RainSeasonBegin = rdd[0x18];
 
-            HistoryStoreInterval_s = rdd[0x1A] == 0x01 ? rdd[0x18] : rdd[0x18] * 60;
+            HistoryStoreInterval_s = rdd[0x1A] == 0x01 ? rdd[0x19] : rdd[0x19] * 60;
 
             TimeZone = rdd[0x1C];
 
@@ -212,38 +239,63 @@ namespace WS980_NS
             WindFactor = rdd[0x2F] / 100f;
             RainfallFactor = rdd[0x30] / 100f;
 
-
-
-
             return true;
         }
 
-        // todo:  DataDefinitionsToString fehlt noch
 
-        // todo:  SendDataDefinitions to WS980
+
         public bool WriteParameter()
         {
-            WriteDataDefinitions();
-            // todo  folgende Funktionen noch implementieren
-            //WriteRainIndex();
-            //WriteAlarmSettings();
-            //WriteTotalMaxMin()
-            //WriteBarometricDataLast24h();
+            bool erg = WriteDataDefinitions();
+            erg &= WriteRainIndex();
+            erg &= WriteAlarmSettings();
+            erg &= WriteTotalMaxMin();
+            erg &= WriteBarometricDataLast24h();
 
-            // todo einzelnen ergebnisse zusammenfassen und zurückgeben
+            return erg;
+        }
+
+        private bool WriteBarometricDataLast24h()
+        {
+            // todo WriteBarometricDataLast24h()
             return true;
         }
 
-        private void WriteDataDefinitions()
+        private bool WriteTotalMaxMin()
         {
-            ws980.WriteEprom(0, rawDataDefinitions);
-            ws980.WriteEprom(0x18, new byte[] { 1 });
+            // todo    WriteTotalMaxMin()
+            return true;
+        }
+
+        private bool WriteAlarmSettings()
+        {
+            // todo WriteAlarmSettings()
+            return true;
+        }
+
+        private bool WriteRainIndex()
+        {
+            // todo WriteRainIndex()
+            return true;
+        }
+
+        private bool WriteDataDefinitions()
+        {
+            bool erg = ws980.WriteEprom(0, rawDataDefinitions);
+            erg &= ws980.WriteEprom(0x18, new byte[] { 1 });
+            return erg;
         }
 
         public string GetRawData()
         {
             return Tools.ToString(rawDataDefinitions);
         }
+
+        // todo:  DataDefinitionsToString fehlt noch
+        // todo: RainIndexToString fehlt noch
+        // todo: AlarmSettingsToString fehlt noch
+        // todo: TotalMaxMinToString fehlt noch
+        // todo: BarometricDataLast24hToString fehlt noch
 
         public override string ToString()
         {
@@ -252,6 +304,7 @@ namespace WS980_NS
         }
     }
 
+    #region Display enums
     public enum RainDisplayTyp
     {
         rate, rainEvent, day, week, month, year, total
@@ -275,7 +328,9 @@ namespace WS980_NS
         drewPoint,
         heatIndex
     }
+    #endregion
 
+    #region Alarm enums
     [Flags]
     public enum AlarmEnableState
     {
@@ -306,9 +361,12 @@ namespace WS980_NS
 
     }
 
+    #endregion
+
+    #region Einheiten enums
     public enum TemperatureUnitE
     {
-        C,F
+        C, F
     }
 
     public enum PressureUnitE
@@ -320,15 +378,18 @@ namespace WS980_NS
     {
         fc, lux, wpm2
     }
+
     public enum WindUnitE
     {
         mps, kmph, knoten, mph, bft
     }
+
     public enum RainUnitE
     {
         mm, inch
     }
 
+    #endregion
 
 
 }

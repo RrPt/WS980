@@ -344,6 +344,7 @@ namespace WS980_NS
                 //tcpclnt.Connect(connectionData.IP, connectionData.Port);
                 if (!tcpclnt.ConnectAsync(connectionData.IP, connectionData.Port).Wait(1000))
                 {
+                    Console.WriteLine("Timeout in getAnswer()");
                     return null;
                 }
                 Stream stm = tcpclnt.GetStream();
