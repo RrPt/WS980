@@ -92,6 +92,7 @@ namespace WS980_NS
 
         public static string ByteArrayToString(byte[] arr)
         {
+            if (arr == null) return null;
             System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
             return enc.GetString(arr);
         }
