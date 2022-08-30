@@ -196,30 +196,38 @@ namespace WS980_NS
         #region Konstruktor
         public WS980(ConnectionData connectionData)
         {
-            this.connectionData = connectionData;
-            SortedList<int, WS980DataItemDef> dataSetDef1 = WS980DataItemDef.dataItemList;
-            new WS980DataItemDef(1, 2, "TempIn", "°C", 1);
-            new WS980DataItemDef(2, 2, "TempOut", "°C", 1);
-            new WS980DataItemDef(3, 2, "TempTau", "°C", 1);
-            new WS980DataItemDef(4, 2, "TempGefühlt", "°C", 1);
-            new WS980DataItemDef(5, 2, "TempHitzeIdx", "°C", 1);
+            try
+            {
+                this.connectionData = connectionData;
+                SortedList<int, WS980DataItemDef> dataSetDef1 = WS980DataItemDef.dataItemList;
+                new WS980DataItemDef(1, 2, "TempIn", "°C", 1);
+                new WS980DataItemDef(2, 2, "TempOut", "°C", 1);
+                new WS980DataItemDef(3, 2, "TempTau", "°C", 1);
+                new WS980DataItemDef(4, 2, "TempGefühlt", "°C", 1);
+                new WS980DataItemDef(5, 2, "TempHitzeIdx", "°C", 1);
 
-            new WS980DataItemDef(6, 1, "FeuchteIn", "%");
-            new WS980DataItemDef(7, 1, "FeuchteOut", "%");
-            new WS980DataItemDef(8, 2, "DruckAbs", "hPa", 1);
-            new WS980DataItemDef(9, 2, "DruckRel", "hPa", 1);
-            new WS980DataItemDef(10, 2, "Windrichtung", "°", 0);
-            new WS980DataItemDef(11, 2, "Windgeschw", "m/s", 1);
-            new WS980DataItemDef(12, 2, "WindBö", "m/s", 1);
-            new WS980DataItemDef(14, 4, "Regen/h", "mm", 1);
-            new WS980DataItemDef(16, 4, "Regen/d", "mm", 1);
-            new WS980DataItemDef(17, 4, "Regen/w", "mm", 1);
-            new WS980DataItemDef(18, 4, "Regen/M", "mm", 1);
-            new WS980DataItemDef(19, 4, "Regen/J", "mm", 1);
-            new WS980DataItemDef(20, 4, "Regen/T", "mm", 1);
-            new WS980DataItemDef(21, 4, "Licht", "lux", 1);
-            new WS980DataItemDef(22, 2, "UvRaw", "uW/m2");
-            new WS980DataItemDef(23, 1, "UvIdxRaw", "");
+                new WS980DataItemDef(6, 1, "FeuchteIn", "%");
+                new WS980DataItemDef(7, 1, "FeuchteOut", "%");
+                new WS980DataItemDef(8, 2, "DruckAbs", "hPa", 1);
+                new WS980DataItemDef(9, 2, "DruckRel", "hPa", 1);
+                new WS980DataItemDef(10, 2, "Windrichtung", "°", 0);
+                new WS980DataItemDef(11, 2, "Windgeschw", "m/s", 1);
+                new WS980DataItemDef(12, 2, "WindBö", "m/s", 1);
+                new WS980DataItemDef(14, 4, "Regen/h", "mm", 1);
+                new WS980DataItemDef(16, 4, "Regen/d", "mm", 1);
+                new WS980DataItemDef(17, 4, "Regen/w", "mm", 1);
+                new WS980DataItemDef(18, 4, "Regen/M", "mm", 1);
+                new WS980DataItemDef(19, 4, "Regen/J", "mm", 1);
+                new WS980DataItemDef(20, 4, "Regen/T", "mm", 1);
+                new WS980DataItemDef(21, 4, "Licht", "lux", 1);
+                new WS980DataItemDef(22, 2, "UvRaw", "uW/m2");
+                new WS980DataItemDef(23, 1, "UvIdxRaw", "");
+            }
+            catch (Exception)
+            {
+
+                
+            }
 
 
         }
@@ -321,7 +329,7 @@ namespace WS980_NS
             byte[] befMinValues = WS980.GetBefArrayBef(6);    // Min
             byte[] befDayMaxValues = WS980.GetBefArrayBef(7); // DayMax
             byte[] befDayMinValues = WS980.GetBefArrayBef(8);  // DayMin
-
+            // Jetzt werden die Daten abgefragt:
             Tools.WriteLine("VER " + Tools.ToString(getValues(getAnswer(befVersion), ValueType.version)));
             Tools.WriteLine("AKT" + Tools.ToString(getValues(getAnswer(befActValues), ValueType.actual)));
             Tools.WriteLine("MAX" + Tools.ToString(getValues(getAnswer(befMaxValues), ValueType.max)));
@@ -444,8 +452,8 @@ namespace WS980_NS
             deltaIdx += sensor.ItemDef.Length;
             sensor?.UpdateValue(receiveBytes.Skip(idx).Take(deltaIdx), valueType);
             // todo debugausgabe
-            Console.WriteLine("{0}  {1}  {2}  Index des Sensors {2} = {3}  0x{2:X2}",idx-1,1,dataIdx,sensor.ItemDef.Name);
-            Console.WriteLine("{0}  {1}  {2}{5}  Wert {3} in {6} {5}    {4}", idx, deltaIdx, sensor.ActualValue, sensor.ItemDef.Name, Tools.ToString(receiveBytes.Skip(idx).Take(deltaIdx).ToArray(), "0x{0:X2} "), sensor.ItemDef.Unit, sensor.ItemDef.Scale);
+            //Console.WriteLine("{0}  {1}  {2}  Index des Sensors {2} = {3}  0x{2:X2}",idx-1,1,dataIdx,sensor.ItemDef.Name);
+            //Console.WriteLine("{0}  {1}  {2}{5}  Wert {3} in {6} {5}    {4}", idx, deltaIdx, sensor.ActualValue, sensor.ItemDef.Name, Tools.ToString(receiveBytes.Skip(idx).Take(deltaIdx).ToArray(), "0x{0:X2} "), sensor.ItemDef.Unit, sensor.ItemDef.Scale);
 
             idx += deltaIdx;
             return idx;
@@ -509,9 +517,9 @@ namespace WS980_NS
             var answer = getAnswer(bef);
 
             // todo debugcode
-            string dbgBef = Tools.ToString(bef, "0x{0:X2} ");
-            string dbgAnt = Tools.ToString(answer, "0x{0:X2} ");
-            Console.WriteLine("{0} --> \n{1}\n",dbgBef,dbgAnt);
+            //string dbgBef = Tools.ToString(bef, "0x{0:X2} ");
+            //string dbgAnt = Tools.ToString(answer, "0x{0:X2} ");
+            //Console.WriteLine("{0} --> \n{1}\n",dbgBef,dbgAnt);
 
             if (answer == null) return false;
             return true;
