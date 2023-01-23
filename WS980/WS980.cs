@@ -380,6 +380,7 @@ namespace WS980_NS
 
         private byte[] getValues(byte[] receiveBytes, ValueType valueType)
         {
+            if (receiveBytes == null) return null;
             string dbg = Tools.ToString(receiveBytes, "0x{0:X2} ");
             string dbgStr = Tools.ByteArrayToString(receiveBytes);
             //WriteDebugData(receiveBytes, valueType);
