@@ -329,13 +329,21 @@ namespace WS980_NS
             byte[] befMinValues = WS980.GetBefArrayBef(6);    // Min
             byte[] befDayMaxValues = WS980.GetBefArrayBef(7); // DayMax
             byte[] befDayMinValues = WS980.GetBefArrayBef(8);  // DayMin
+
             // Jetzt werden die Daten abgefragt:
-            Tools.WriteLine("VER " + Tools.ToString(getValues(getAnswer(befVersion), ValueType.version)));
-            Tools.WriteLine("AKT" + Tools.ToString(getValues(getAnswer(befActValues), ValueType.actual)));
-            Tools.WriteLine("MAX" + Tools.ToString(getValues(getAnswer(befMaxValues), ValueType.max)));
-            Tools.WriteLine("MIN" + Tools.ToString(getValues(getAnswer(befMinValues), ValueType.min)));
-            Tools.WriteLine("DAX" + Tools.ToString(getValues(getAnswer(befDayMaxValues), ValueType.dayMax)));
-            Tools.WriteLine("DIN" + Tools.ToString(getValues(getAnswer(befDayMinValues), ValueType.dayMin)));
+            //Tools.WriteLine("VER" + Tools.ToString(getValues(getAnswer(befVersion), ValueType.version)));
+            //Tools.WriteLine("AKT" + Tools.ToString(getValues(getAnswer(befActValues), ValueType.actual)));
+            //Tools.WriteLine("MAX" + Tools.ToString(getValues(getAnswer(befMaxValues), ValueType.max)));
+            //Tools.WriteLine("MIN" + Tools.ToString(getValues(getAnswer(befMinValues), ValueType.min)));
+            //Tools.WriteLine("DAX" + Tools.ToString(getValues(getAnswer(befDayMaxValues), ValueType.dayMax)));
+            //Tools.WriteLine("DIN" + Tools.ToString(getValues(getAnswer(befDayMinValues), ValueType.dayMin)));
+
+            getValues(getAnswer(befVersion), ValueType.version);
+            getValues(getAnswer(befActValues), ValueType.actual);
+            getValues(getAnswer(befMaxValues), ValueType.max);
+            getValues(getAnswer(befMinValues), ValueType.min);
+            getValues(getAnswer(befDayMaxValues), ValueType.dayMax);
+            getValues(getAnswer(befDayMinValues), ValueType.dayMin);
 
             return;
         }
