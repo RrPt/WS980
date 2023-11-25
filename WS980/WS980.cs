@@ -358,9 +358,9 @@ namespace WS980_NS
                 tcpclnt.ReceiveTimeout = 2000;
                 tcpclnt.SendTimeout = 2000;
                 //tcpclnt.Connect(connectionData.IP, connectionData.Port);
-                if (!tcpclnt.ConnectAsync(connectionData.IP, connectionData.Port).Wait(1000))
+                if (!tcpclnt.ConnectAsync(connectionData.IP, connectionData.Port).Wait(2000))
                 {
-                    Console.WriteLine("Timeout in getAnswer()");
+                    Console.WriteLine("Timeout in WS980.getAnswer()");
                     return null;
                 }
                 Stream stm = tcpclnt.GetStream();
