@@ -3,6 +3,7 @@
 //https://github.com/matthewwall/weewx-wh23xx/blob/master/bin/user/wh23xx.py
 //https://www.elv.de/topic/protokolldefinition-zum-datenaustausch-ws980-zum-pc.html
 
+using RpToolsNs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -200,28 +201,28 @@ namespace WS980_NS
             {
                 this.connectionData = connectionData;
                 SortedList<int, WS980DataItemDef> dataSetDef1 = WS980DataItemDef.dataItemList;
-                new WS980DataItemDef(1, 2, "TempIn", "°C", 1);
-                new WS980DataItemDef(2, 2, "TempOut", "°C", 1);
-                new WS980DataItemDef(3, 2, "TempTau", "°C", 1);
-                new WS980DataItemDef(4, 2, "TempGefühlt", "°C", 1);
-                new WS980DataItemDef(5, 2, "TempHitzeIdx", "°C", 1);
+                new WS980DataItemDef(1, 2, "TempIn", "°C", 1, -50.0, 100.0,ValueTypes.All);
+                new WS980DataItemDef(2, 2, "TempOut", "°C", 1,-50.0,100.0, ValueTypes.All);
+                new WS980DataItemDef(3, 2, "TempTau", "°C", 1, -50.0, 100.0, ValueTypes.All);
+                new WS980DataItemDef(4, 2, "TempGefuehlt", "°C", 1, -50.0, 100.0, ValueTypes.Min|ValueTypes.DayMin);
+                new WS980DataItemDef(5, 2, "TempHitzeIdx", "°C", 1, -50.0, 100.0, ValueTypes.Max | ValueTypes.DayMax);
 
-                new WS980DataItemDef(6, 1, "FeuchteIn", "%");
-                new WS980DataItemDef(7, 1, "FeuchteOut", "%");
-                new WS980DataItemDef(8, 2, "DruckAbs", "hPa", 1);
-                new WS980DataItemDef(9, 2, "DruckRel", "hPa", 1);
-                new WS980DataItemDef(10, 2, "Windrichtung", "°", 0);
-                new WS980DataItemDef(11, 2, "Windgeschw", "m/s", 1);
-                new WS980DataItemDef(12, 2, "WindBö", "m/s", 1);
-                new WS980DataItemDef(14, 4, "Regen/h", "mm", 1);
-                new WS980DataItemDef(16, 4, "Regen/d", "mm", 1);
-                new WS980DataItemDef(17, 4, "Regen/w", "mm", 1);
-                new WS980DataItemDef(18, 4, "Regen/M", "mm", 1);
-                new WS980DataItemDef(19, 4, "Regen/J", "mm", 1);
-                new WS980DataItemDef(20, 4, "Regen/T", "mm", 1);
-                new WS980DataItemDef(21, 4, "Licht", "lux", 1);
-                new WS980DataItemDef(22, 2, "UvRaw", "uW/m2");
-                new WS980DataItemDef(23, 1, "UvIdxRaw", "");
+                new WS980DataItemDef(6, 1, "FeuchteIn", "%", 0,0.0, 100.0,ValueTypes.All);
+                new WS980DataItemDef(7, 1, "FeuchteOut", "%", 0,0.0, 100.0, ValueTypes.All);
+                new WS980DataItemDef(8, 2, "DruckAbs", "hPa", 1, 900.0, 1100.0, ValueTypes.All);
+                new WS980DataItemDef(9, 2, "DruckRel", "hPa", 1, 900.0, 1100.0, ValueTypes.All);
+                new WS980DataItemDef(10, 2, "Windrichtung", "°", 0, -180.0, 360.0, ValueTypes.Actual);
+                new WS980DataItemDef(11, 2, "Windgeschw", "m/s", 1, 0.0, 300.0, ValueTypes.Max | ValueTypes.DayMax);
+                new WS980DataItemDef(12, 2, "WindBö", "m/s", 1, 0.0, 300.0, ValueTypes.Max | ValueTypes.DayMax);
+                new WS980DataItemDef(14, 4, "Regen/h", "mm", 1, 0.0, 500.0, ValueTypes.Max | ValueTypes.DayMax);
+                new WS980DataItemDef(16, 4, "Regen/d", "mm", 1, 0.0,2000.0, ValueTypes.Max);
+                new WS980DataItemDef(17, 4, "Regen/w", "mm", 1, 0.0,5000.0, ValueTypes.Max);
+                new WS980DataItemDef(18, 4, "Regen/M", "mm", 1, 0.0,50000.0, ValueTypes.Max);
+                new WS980DataItemDef(19, 4, "Regen/J", "mm", 1, 0.0,50000.0, ValueTypes.Max);
+                new WS980DataItemDef(20, 4, "Regen/T", "mm", 1, 0.0,5000000.0, ValueTypes.Max);
+                new WS980DataItemDef(21, 4, "Licht", "lux", 1,0.0,500000.0, ValueTypes.Max | ValueTypes.DayMax);
+                new WS980DataItemDef(22, 2, "UvRaw", "uW/m2",0,0,100,ValueTypes.DayMax);
+                new WS980DataItemDef(23, 1, "UvIdxRaw", "",0,0,100, ValueTypes.Max | ValueTypes.DayMax);
             }
             catch (Exception)
             {
@@ -264,10 +265,9 @@ namespace WS980_NS
             receiveClient = new UdpClient(lep.Port);
             RemoteIpEndPoint = lep;
 
-
             receiveClient.BeginReceive(new AsyncCallback(ReceiveCallback), null);
 
-            //// Blocks until a message returns on this socket from a remote host.
+            // 2s Zeit geben für die Antwort
             DateTime startTime = DateTime.UtcNow;
             while ((DateTime.UtcNow - startTime).TotalMilliseconds < timeout)
             {

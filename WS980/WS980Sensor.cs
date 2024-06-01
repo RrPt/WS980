@@ -79,32 +79,43 @@ namespace WS980_NS
             switch (valueType)
             {
                 case ValueType.actual:
-                    actualValue = val;
+                    actualValue = ValInRange(val);
                     time = DateTime.UtcNow;
                     break;
                 case ValueType.min:
-                    minValue = val;
+                    minValue = ValInRange(val);
                     break;
                 case ValueType.max:
-                    maxValue = val;
+                    maxValue = ValInRange(val);
                     break;
                 case ValueType.dayMin:
-                    dayMinValue = val;
+                    Console.WriteLine("{0}.{1}={2}", name, valueType, val);
+                    dayMinValue = ValInRange(val);
                     dayMinTime = GetTime(dataBytes.Skip(dataBytes.Count() - 2));
                     break;
                 case ValueType.dayMax:
-                    dayMaxValue = val;
+                    Console.WriteLine("{0}.{1}={2}", name, valueType, val);
+                    dayMaxValue = ValInRange(val);
                     dayMaxTime = GetTime(dataBytes.Skip(dataBytes.Count() - 2));
                     break;
                 default:
+                    Console.WriteLine("==> {0}.{1}={2}", name, valueType, val);
                     break;
             }
         }
 
+        private double? ValInRange(double val)
+        {
+            if (val > itemDef.MaxAllowedValue) return null;
+            if (val < itemDef.MinAllowedValue) return null;
+            return val;
+        }
+
         private DateTime? GetTime(IEnumerable<byte> timeBytes)
         {
-            DateTime time = DateTime.UtcNow.Date;
+            DateTime time = DateTime.Now.Date;
             time = time.AddHours(timeBytes.ElementAt(0)).AddMinutes(timeBytes.ElementAt(1));
+            //return TimeZoneInfo.ConvertTimeFromUtc(time, TimeZoneInfo.Local);
             return time;
         }
 
@@ -119,7 +130,7 @@ namespace WS980_NS
 
         private string str(double? val)
         {
-            if (!val.HasValue) return "   ";
+            if (!val.HasValue) return "  ";
             int noOfDigAfterDecimalPoint = (int)(0.5 - Math.Log10(scale));
             if (noOfDigAfterDecimalPoint < 0) noOfDigAfterDecimalPoint = 0;
             if (noOfDigAfterDecimalPoint > 6) noOfDigAfterDecimalPoint = 6;
@@ -127,6 +138,15 @@ namespace WS980_NS
             return String.Format(fmt, val); ;
         }
 
+        private string strPt(string tag,double? val)
+        {
+            if (!val.HasValue) return String.Format("\"{0}\":\"null\"", tag);
+            int noOfDigAfterDecimalPoint = (int)(0.5 - Math.Log10(scale));
+            if (noOfDigAfterDecimalPoint < 0) noOfDigAfterDecimalPoint = 0;
+            //if (noOfDigAfterDecimalPoint > 6) noOfDigAfterDecimalPoint = 6;
+            string fmt = "\"{0}\":{1:0.".PadRight(11 + noOfDigAfterDecimalPoint, '0') + "}" ;
+            return String.Format(fmt, tag,val).Replace(",","."); 
+        }
 
         byte GetUvIdx(double? value)
         {
@@ -137,6 +157,30 @@ namespace WS980_NS
                 if (value < UvIdxBorders[i]) return (byte)(i - 1);
             }
             return 15;
+        }
+
+        public string GetJson()
+        {
+            StringBuilder erg = new StringBuilder();
+            erg.Append("{");
+            erg.Append(strPt("actual", ActualValue) + ",");
+            if ((itemDef.UsedValueTypes & ValueTypes.Min) != 0) erg.Append(strPt("min", MinValue)+",");
+            if ((itemDef.UsedValueTypes & ValueTypes.Max) != 0) erg.Append(strPt("max", MaxValue)+",");
+            if ((itemDef.UsedValueTypes & ValueTypes.DayMin) != 0)
+            {
+                erg.Append(strPt("daymin", DayMinValue) + ",");
+                erg.Append("\"daymintime\":\"" + DayMinTime?.ToString("o")+"\",");
+            }
+
+            if ((itemDef.UsedValueTypes & ValueTypes.DayMax) != 0)
+            {
+                erg.Append(strPt("daymax", DayMaxValue) + ",");
+                erg.Append("\"daymaxtime\":\"" + DayMaxTime?.ToString("o") + "\",");
+            }
+            erg.Remove(erg.Length - 1, 1);
+            erg.Append("}");
+            string erg1 = String.Format("{{{0},{1},{2}}}", strPt("actual",ActualValue), strPt("min",MinValue), strPt("max",MaxValue));
+            return erg.ToString();
         }
     }
 }
