@@ -70,6 +70,11 @@ namespace WS980ToMqtt
                     ws980.getData();
 
                     PublishMqtt("Time",now.ToString("o"));
+                    // debugging
+                    WS980Sensor sens = ws980.SensorList.Values[1];
+                    //MyLogger.Info("{0:0.00}: {1:0.00} <{2:0.00} {3:0.00}>  Daymin:[{4:0.00} {5}] Daymax:[{6:0.00} {7}] JSON:{8}", sens.Name, sens.ActualValue, sens.MinValue, sens.MaxValue, sens.DayMinValue, sens.DayMinTime, sens.DayMaxValue, sens.DayMaxTime,sens.GetJson());
+
+
                     MyLogger.Debug("-- {0} --------", now.ToString("o"));
                     foreach (var sensor in ws980.SensorList.Values)
                     {
@@ -77,8 +82,8 @@ namespace WS980ToMqtt
                         PublishMqtt(sensor.Name, sensor.GetJson());
                     }
 
-                    // um Mitternacht Mail senden wenn es einen Fehler gab
-                    if (lastMeasureTime.Day < now.Day)
+                    // zyklisch Mail senden wenn es einen Fehler gab
+                    if (lastMeasureTime.Hour < now.Hour)
                     {
                         MyLogger.SendSammelEmail();
                         MyLogger.Info("{0} Schleifendurchläufe", loopCounter);    

@@ -24,7 +24,7 @@ namespace WS980ToMqtt
 
         protected override void OnStart(string[] args)
         {
-            MyLogger.Info("Ws980ToMqttService.OnStart: Starte Tread für DoJob");
+            MyLogger.Info("Ws980ToMqttService.OnStart: Starte Thread für DoJob");
             workThread = new Thread(new ThreadStart(DoJob));
             mp.stopPending = false;
             workThread.Start();

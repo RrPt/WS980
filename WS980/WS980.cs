@@ -18,10 +18,19 @@ using System.Threading.Tasks;
 namespace WS980_NS
 {
     public enum ValueType
-    {
-        actual, min, max, version,
-        dayMax,
-        dayMin
+    {  // = Befehlscode
+        version = 0,
+        timeSync = 1,
+        readEprom = 2, 
+        writeEprom = 3,
+        actual = 4,
+        max = 5,
+        min = 6, 
+        dayMax = 7,
+        dayMin = 8,
+        resetMaxMin = 9,
+        paraChange = 10,
+        resetHistory = 12
     }
 
     public class TableDataItem
@@ -388,9 +397,11 @@ namespace WS980_NS
 
         private byte[] getValues(byte[] receiveBytes, ValueType valueType)
         {
+
             if (receiveBytes == null) return null;
             string dbg = Tools.ToString(receiveBytes, "0x{0:X2} ");
             string dbgStr = Tools.ByteArrayToString(receiveBytes);
+            MyLogger.Debug("getValues {0} {1}", valueType, dbg);
             //WriteDebugData(receiveBytes, valueType);
             //Tools.WriteLine("\n{0}: {1} {2}\n", valueType, BitConverter.ToString(receiveBytes), Encoding.ASCII.GetString(receiveBytes));
             if (receiveBytes[0] != 0xFF) return null;
@@ -421,7 +432,12 @@ namespace WS980_NS
                 // Befehl prüfen
                 if (receiveBytes[2] != 0x0b) return null;       
                 int len = 256 * (int)receiveBytes[3] + receiveBytes[4];
-                int para = receiveBytes[5];
+                int befCode = receiveBytes[5];
+                if (befCode != (int)valueType)
+                {
+                    MyLogger.ErrM("getValues: Empfangene Daten (Typ={0}) entsprechen nicht den angeforderten (Typ={1})", (ValueType)befCode, valueType);
+                    return null;
+                }
                 int idx = 6;
 
                 while (idx < receiveBytes.Length - 2)

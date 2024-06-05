@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RpToolsNs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -75,6 +76,9 @@ namespace WS980_NS
                 }
                 val = val * itemDef.Scale;
             }
+
+            string dbg = Tools.ToString(dataBytes.ToArray(), "0x{0:X2} ");
+            MyLogger.Debug("  UpdateValue[{0}].{1}={2}  Data:{3}",name,valueType,val,dbg);
 
             switch (valueType)
             {
