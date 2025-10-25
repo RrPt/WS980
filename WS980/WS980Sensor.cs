@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace WS980_NS
 {
@@ -165,26 +166,38 @@ namespace WS980_NS
 
         public string GetJson()
         {
-            StringBuilder erg = new StringBuilder();
-            erg.Append("{");
-            erg.Append(strPt("actual", ActualValue) + ",");
-            if ((itemDef.UsedValueTypes & ValueTypes.Min) != 0) erg.Append(strPt("min", MinValue)+",");
-            if ((itemDef.UsedValueTypes & ValueTypes.Max) != 0) erg.Append(strPt("max", MaxValue)+",");
-            if ((itemDef.UsedValueTypes & ValueTypes.DayMin) != 0)
-            {
-                erg.Append(strPt("daymin", DayMinValue) + ",");
-                erg.Append("\"daymintime\":\"" + DayMinTime?.ToString("o")+"\",");
-            }
+            var x = new {
+            actual = ActualValue,
+            min = MinValue,
+            max=MaxValue,
+            daymin = DayMinValue,
+            daymintime = DayMinTime,
+            daymaxtime= DayMaxTime,
+            daymax = DayMaxValue
+            };
+            
+            return JsonSerializer.Serialize(x);
 
-            if ((itemDef.UsedValueTypes & ValueTypes.DayMax) != 0)
-            {
-                erg.Append(strPt("daymax", DayMaxValue) + ",");
-                erg.Append("\"daymaxtime\":\"" + DayMaxTime?.ToString("o") + "\",");
-            }
-            erg.Remove(erg.Length - 1, 1);
-            erg.Append("}");
-            string erg1 = String.Format("{{{0},{1},{2}}}", strPt("actual",ActualValue), strPt("min",MinValue), strPt("max",MaxValue));
-            return erg.ToString();
+            //StringBuilder erg = new StringBuilder();
+            //erg.Append("{");
+            //erg.Append(strPt("actual", ActualValue) + ",");
+            //if ((itemDef.UsedValueTypes & ValueTypes.Min) != 0) erg.Append(strPt("min", MinValue)+",");
+            //if ((itemDef.UsedValueTypes & ValueTypes.Max) != 0) erg.Append(strPt("max", MaxValue)+",");
+            //if ((itemDef.UsedValueTypes & ValueTypes.DayMin) != 0)
+            //{
+            //    erg.Append(strPt("daymin", DayMinValue) + ",");
+            //    erg.Append("\"daymintime\":\"" + DayMinTime?.ToString("o")+"\",");
+            //}
+
+            //if ((itemDef.UsedValueTypes & ValueTypes.DayMax) != 0)
+            //{
+            //    erg.Append(strPt("daymax", DayMaxValue) + ",");
+            //    erg.Append("\"daymaxtime\":\"" + DayMaxTime?.ToString("o") + "\",");
+            //}
+            //erg.Remove(erg.Length - 1, 1);
+            //erg.Append("}");
+            ////string erg1 = String.Format("{{{0},{1},{2}}}", strPt("actual",ActualValue), strPt("min",MinValue), strPt("max",MaxValue));
+            //return erg.ToString();
         }
     }
 }

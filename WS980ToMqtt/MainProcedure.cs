@@ -80,6 +80,7 @@ namespace WS980ToMqtt
                     {
                         MyLogger.Debug(sensor.ToString() );
                         PublishMqtt(sensor.Name, sensor.GetJson());
+                        MyLogger.Debug("PublishMQTT({0},{1})", sensor.Name, sensor.GetJson());
                     }
 
                     // zyklisch Mail senden wenn es einen Fehler gab
