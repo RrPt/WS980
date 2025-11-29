@@ -57,7 +57,7 @@ namespace WS980ToMqtt
                 .WithCredentials("hv", "Mqtt4hv")
                 .Build();
 
-            var t = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
+            MqttClientConnectResult t = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
             MyLogger.Info("Sende MQTT an " + mqttServer);
             int loopCounter = 0;
             do
@@ -95,11 +95,13 @@ namespace WS980ToMqtt
                 }
                 catch (Exception eX)
                 {
-                    MyLogger.CriticalM("s980ToMqttService befindet sich in einem undefinierten Zustand.");
-                    MyLogger.CriticalM(eX.Message);
+                    MyLogger.CriticalM("Ws980ToMqttService befindet sich in einem undefinierten Zustand.");
+                    MyLogger.LogException("Start() in Do-loop", eX);
                     if (eX.InnerException != null)
                     {
-                        MyLogger.CriticalM(eX.InnerException.Message);
+                        MyLogger.LogException("inner exception",eX);
+                        MqttClientConnectResult erg = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
+                        MyLogger.Info("Versuch MQTT reconnect zu {0} : {1}",  mqttServer,erg?.ReasonString);
                     }
                 }
                 finally
