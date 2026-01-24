@@ -19,7 +19,7 @@ namespace WS980ToMqtt
         DateTime now;
         DateTime waitUntilTime;
         WS980 ws980 = null;
-        String mqttServer = "192.168.22.100";
+        String mqttServer = "192.168.22.101";
 
         internal void Start()
         {
@@ -69,7 +69,9 @@ namespace WS980ToMqtt
 
                     ws980.getData();
 
-                    PublishMqtt("Time",now.ToString("o"));
+                    bool erg = PublishMqtt("Time",now.ToString("o"));
+                    if (!erg)
+                        MyLogger.Err("Exeprion in PublishMqtt('Time',{0})", now.ToString("o"));
                     // debugging
                     WS980Sensor sens = ws980.SensorList.Values[1];
                     //MyLogger.Info("{0:0.00}: {1:0.00} <{2:0.00} {3:0.00}>  Daymin:[{4:0.00} {5}] Daymax:[{6:0.00} {7}] JSON:{8}", sens.Name, sens.ActualValue, sens.MinValue, sens.MaxValue, sens.DayMinValue, sens.DayMinTime, sens.DayMaxValue, sens.DayMaxTime,sens.GetJson());
@@ -79,8 +81,11 @@ namespace WS980ToMqtt
                     foreach (var sensor in ws980.SensorList.Values)
                     {
                         MyLogger.Debug(sensor.ToString() );
-                        PublishMqtt(sensor.Name, sensor.GetJson());
-                        MyLogger.Debug("PublishMQTT({0},{1})", sensor.Name, sensor.GetJson());
+                        erg = PublishMqtt(sensor.Name, sensor.GetJson());
+                        if (!erg)
+                            MyLogger.Err("Exeption in PublishMqtt({0},{1})", sensor.Name, sensor.GetJson());
+                        else
+                            MyLogger.Debug("PublishMQTT({0},{1})", sensor.Name, sensor.GetJson());
                     }
 
                     // zyklisch Mail senden wenn es einen Fehler gab
@@ -116,10 +121,18 @@ namespace WS980ToMqtt
             MyLogger.Info("MainProcedure.Start: Schleife beendet");
         }
 
-        private void PublishMqtt(string topic, string payload)
+        private bool PublishMqtt(string topic, string payload)
         {
-            var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(topicBase+topic).WithPayload(payload).Build();
-            mqttClient.PublishAsync(applicationMessage, CancellationToken.None).GetAwaiter().GetResult();
+            try
+            {
+                var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(topicBase + topic).WithPayload(payload).Build();
+                mqttClient.PublishAsync(applicationMessage, CancellationToken.None).GetAwaiter().GetResult();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }
