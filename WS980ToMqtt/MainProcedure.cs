@@ -71,7 +71,7 @@ namespace WS980ToMqtt
 
                     bool erg = PublishMqtt("Time",now.ToString("o"));
                     if (!erg)
-                        MyLogger.Err("Exeprion in PublishMqtt('Time',{0})", now.ToString("o"));
+                        MyLogger.Err("Exeption in PublishMqtt('Time',{0})", now.ToString("o"));
                     // debugging
                     WS980Sensor sens = ws980.SensorList.Values[1];
                     //MyLogger.Info("{0:0.00}: {1:0.00} <{2:0.00} {3:0.00}>  Daymin:[{4:0.00} {5}] Daymax:[{6:0.00} {7}] JSON:{8}", sens.Name, sens.ActualValue, sens.MinValue, sens.MaxValue, sens.DayMinValue, sens.DayMinTime, sens.DayMaxValue, sens.DayMaxTime,sens.GetJson());
