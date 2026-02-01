@@ -1,9 +1,11 @@
-﻿using RpToolsNs;
-using System;
-using System.Threading;
+﻿using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet;
+using RpToolsNs;
+using System;
+using System.ComponentModel;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using WS980_NS;
 
 namespace WS980ToMqtt
@@ -39,7 +41,7 @@ namespace WS980ToMqtt
             }
             else
             {
-                MyLogger.Info("Folgnde Wetterstationen gefunden:");
+                MyLogger.Info("Folgende Wetterstationen gefunden:");
                 int i = 1;
                 foreach (var item in WS980List)
                 {
@@ -48,14 +50,46 @@ namespace WS980ToMqtt
             }
             ws980 = new WS980(WS980List[0]);
             MyLogger.Info("1. Wetterstation ausgewählt");
-            ws980.ReadParameter();
-
+            while (!ws980.DataValid)
+            {
+                ws980.ReadParameter();
+                if (!ws980.DataValid)
+                {
+                    MyLogger.Err("ReadParameter nicht erfolgreich");
+                    MyLogger.Notfallmeldung("WS8´989ToMqtt.MainProcedure.Start; ws980.ReadParameter() liefert Fehler");
+                    Thread.Sleep(60000); // 60s warten dann wieder versuchen
+                }
+            }
             var mqttFactory = new MqttFactory();
             mqttClient = mqttFactory.CreateMqttClient();
             mqttClientOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer(mqttServer)
                 .WithCredentials("hv", "Mqtt4hv")
                 .Build();
+
+            mqttClient.ConnectedAsync += async e =>
+            {
+                MyLogger.Info("MQTT connected.");
+            };
+
+            mqttClient.DisconnectedAsync += async e =>
+            {
+                MyLogger.Err("MQTT disconnected: " + e.ReasonString);
+
+                // Warte kurz, damit wir nicht in eine Reconnect-Schleife rasen
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
+                try
+                {
+                    MyLogger.Info("Trying MQTT reconnect...");
+                    await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+                    MyLogger.Info("MQTT reconnect successful.");
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.Err("MQTT reconnect failed: " + ex.Message);
+                }
+            };
 
             MqttClientConnectResult t = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
             MyLogger.Info("Sende MQTT an " + mqttServer);
@@ -67,36 +101,42 @@ namespace WS980ToMqtt
 
                     now = DateTime.UtcNow;
 
-                    ws980.getData();
-
-                    bool erg = PublishMqtt("Time",now.ToString("o"));
-                    if (!erg)
-                        MyLogger.Err("Exeption in PublishMqtt('Time',{0})", now.ToString("o"));
-                    // debugging
-                    WS980Sensor sens = ws980.SensorList.Values[1];
-                    //MyLogger.Info("{0:0.00}: {1:0.00} <{2:0.00} {3:0.00}>  Daymin:[{4:0.00} {5}] Daymax:[{6:0.00} {7}] JSON:{8}", sens.Name, sens.ActualValue, sens.MinValue, sens.MaxValue, sens.DayMinValue, sens.DayMinTime, sens.DayMaxValue, sens.DayMaxTime,sens.GetJson());
-
-
-                    MyLogger.Debug("-- {0} --------", now.ToString("o"));
-                    foreach (var sensor in ws980.SensorList.Values)
+                    if (!ws980.getData())
+                        MyLogger.ErrM("WS8´989ToMqtt.MainProcedure.Start; ws980.getData() liefert Fehler");
+                    else
                     {
-                        MyLogger.Debug(sensor.ToString() );
-                        erg = PublishMqtt(sensor.Name, sensor.GetJson());
+
+                        bool erg = PublishMqtt("Time", now.ToString("o"));
                         if (!erg)
-                            MyLogger.Err("Exeption in PublishMqtt({0},{1})", sensor.Name, sensor.GetJson());
-                        else
-                            MyLogger.Debug("PublishMQTT({0},{1})", sensor.Name, sensor.GetJson());
-                    }
+                            MyLogger.Err("Exeption in PublishMqtt('Time',{0})", now.ToString("o"));
+                        // debugging
+                        WS980Sensor sens = ws980.SensorList.Values[1];
+                        //MyLogger.Info("{0:0.00}: {1:0.00} <{2:0.00} {3:0.00}>  Daymin:[{4:0.00} {5}] Daymax:[{6:0.00} {7}] JSON:{8}", sens.Name, sens.ActualValue, sens.MinValue, sens.MaxValue, sens.DayMinValue, sens.DayMinTime, sens.DayMaxValue, sens.DayMaxTime,sens.GetJson());
 
-                    // zyklisch Mail senden wenn es einen Fehler gab
-                    if (lastMeasureTime.Hour < now.Hour)
-                    {
-                        MyLogger.SendSammelEmail();
-                        MyLogger.Info("{0} Schleifendurchläufe", loopCounter);    
-                    }
 
-                    lastMeasureTime = now;
-                    loopCounter++;
+                        MyLogger.Debug("-- {0} --------", now.ToString("o"));
+                        foreach (var sensor in ws980.SensorList.Values)
+                        {
+                            MyLogger.Debug(sensor.ToString());
+                            erg = PublishMqtt(sensor.Name, sensor.GetJson());
+                            if (!erg)
+                                MyLogger.Err("Exeption in PublishMqtt({0},{1})", sensor.Name, sensor.GetJson());
+                            else
+                                MyLogger.Debug("PublishMQTT({0},{1})", sensor.Name, sensor.GetJson());
+                        }
+
+                        // zyklisch Mail senden wenn es einen Fehler gab
+                        if (lastMeasureTime.Hour < now.Hour)
+                        {
+                            MyLogger.Warn("Sammelemail senden");
+                            MyLogger.SendSammelEmail();
+                            //MyLogger.Warn("Sammelemail ausgeblendet, da unnötig");
+                            MyLogger.Info("{0} Schleifendurchläufe", loopCounter);
+                        }
+
+                        lastMeasureTime = now;
+                        loopCounter++;
+                    }
                 }
                 catch (Exception eX)
                 {
@@ -129,8 +169,9 @@ namespace WS980ToMqtt
                 mqttClient.PublishAsync(applicationMessage, CancellationToken.None).GetAwaiter().GetResult();
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MyLogger.LogException("PublishMqtt",ex);
                 return false;
             }
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RpToolsNs;
+using System;
 
 namespace WS980_NS
 {
@@ -144,12 +145,17 @@ namespace WS980_NS
         public WS980Parameter(WS980 wS980)
         {
             this.ws980 = wS980;
-            ReadParameter();
+            bool erg = ReadParameter();
+            ws980.DataValid = erg;
         }
 
-        public void ReadParameter()
+        public bool ReadParameter()
         {
             bool erg = ReadDataDefinitions();
+            if (erg)
+                MyLogger.Info("DataDefinitions erfolgreich gelesen");
+            else
+                MyLogger.Err("DataDefinitions konnten nicht gelesen werden");
             // todo  folgende Funktionen noch implementieren
             //ReadRainIndex();
             //ReadAlarmSettings();
@@ -162,11 +168,18 @@ namespace WS980_NS
             //rawData = ws980.ReadEprom(0x170, 0x1F4 - 0x170 + 1);
             //rawData = ws980.ReadEprom(0x200, 0x22f - 0x200 + 1);
 
+            return erg;
         }
 
         private bool ReadDataDefinitions()
         {
             rawDataDefinitions = ws980.ReadEprom(0, 0x35);
+            if (rawDataDefinitions == null)
+            {
+                ws980.DataValid = false;
+                return false;
+            }
+
             var rdd = rawDataDefinitions;
             if (rdd[0] != 0x55 & rdd[1] != 0xAA) { Tools.WriteLine("EPROM nicht initialisiert"); return false; }
             Model = rdd[2] + rdd[3] * 254;

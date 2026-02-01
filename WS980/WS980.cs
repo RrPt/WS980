@@ -250,6 +250,11 @@ namespace WS980_NS
         public string Version { get => version; set => version = value; }
         public SortedList<int, WS980Sensor> SensorList { get => sensorList; set => sensorList = value; }
         public WS980Parameter Para { get => para; set => para = value; }
+        public bool DataValid
+        {
+            get;
+            internal set;
+        }
 
         #endregion
 
@@ -329,7 +334,7 @@ namespace WS980_NS
         }
         #endregion
 
-        public void getData()
+        public bool getData()
         {
             byte[] befVersion =   { 0xff, 0xff, 0x50, 0x03, 0x53 };  // Version
 
@@ -347,14 +352,15 @@ namespace WS980_NS
             //Tools.WriteLine("DAX" + Tools.ToString(getValues(getAnswer(befDayMaxValues), ValueType.dayMax)));
             //Tools.WriteLine("DIN" + Tools.ToString(getValues(getAnswer(befDayMinValues), ValueType.dayMin)));
 
-            getValues(getAnswer(befVersion), ValueType.version);
-            getValues(getAnswer(befActValues), ValueType.actual);
-            getValues(getAnswer(befMaxValues), ValueType.max);
-            getValues(getAnswer(befMinValues), ValueType.min);
-            getValues(getAnswer(befDayMaxValues), ValueType.dayMax);
-            getValues(getAnswer(befDayMinValues), ValueType.dayMin);
+            bool erg = true;
+            erg = erg && getValues(getAnswer(befVersion), ValueType.version);
+            erg = erg && getValues(getAnswer(befActValues), ValueType.actual);
+            erg = erg && getValues(getAnswer(befMaxValues), ValueType.max);
+            erg = erg && getValues(getAnswer(befMinValues), ValueType.min);
+            erg = erg && getValues(getAnswer(befDayMaxValues), ValueType.dayMax);
+            erg = erg && getValues(getAnswer(befDayMinValues), ValueType.dayMin);
 
-            return;
+            return erg;
         }
 
 
@@ -395,20 +401,20 @@ namespace WS980_NS
         }
 
 
-        private byte[] getValues(byte[] receiveBytes, ValueType valueType)
+        private bool getValues(byte[] receiveBytes, ValueType valueType)
         {
 
-            if (receiveBytes == null) return null;
+            if (receiveBytes == null) return false;
             string dbg = Tools.ToString(receiveBytes, "0x{0:X2} ");
             string dbgStr = Tools.ByteArrayToString(receiveBytes);
             MyLogger.Debug("getValues {0} {1}", valueType, dbg);
             //WriteDebugData(receiveBytes, valueType);
             //Tools.WriteLine("\n{0}: {1} {2}\n", valueType, BitConverter.ToString(receiveBytes), Encoding.ASCII.GetString(receiveBytes));
-            if (receiveBytes[0] != 0xFF) return null;
-            if (receiveBytes[1] != 0xFF) return null;
+            if (receiveBytes[0] != 0xFF) return false;
+            if (receiveBytes[1] != 0xFF) return false;
             if (valueType == ValueType.version)
             {
-                if (receiveBytes[2] != 0x50) return null;
+                if (receiveBytes[2] != 0x50) return false;
                 int len =  (int)receiveBytes[3];
                 version = Encoding.ASCII.GetString(receiveBytes.Skip(5).ToArray());
             }
@@ -422,21 +428,21 @@ namespace WS980_NS
                 if (crcIst1!= receiveBytes[idxCrc])
                 {
                     Tools.WriteLine("1. Prüfsumme falsch CRCIst={0}  CrcSoll={1}\n", crcIst2, receiveBytes[idxCrc]);
-                    return null;
+                    return false;
                 }
                 if (crcIst2 != receiveBytes[idxCrc+1])
                 {
                     Tools.WriteLine("2. Prüfsumme falsch CRCIst={0}  CrcSoll={1}\n", crcIst2, receiveBytes[idxCrc+1]);
-                    return null;
+                    return false;
                 }
                 // Befehl prüfen
-                if (receiveBytes[2] != 0x0b) return null;       
+                if (receiveBytes[2] != 0x0b) return false;       
                 int len = 256 * (int)receiveBytes[3] + receiveBytes[4];
                 int befCode = receiveBytes[5];
                 if (befCode != (int)valueType)
                 {
                     MyLogger.ErrM("getValues: Empfangene Daten (Typ={0}) entsprechen nicht den angeforderten (Typ={1})", (ValueType)befCode, valueType);
-                    return null;
+                    return false;
                 }
                 int idx = 6;
 
@@ -445,11 +451,11 @@ namespace WS980_NS
                     idx = getNextDataItem(idx, receiveBytes, valueType);
                     if (idx<0)
                     {
-                        return null;
+                        return false;
                     }
                 }
             }
-            return receiveBytes;
+            return true;
         }
 
         private void WriteDebugData(byte[] receiveBytes, ValueType valueType)
