@@ -94,6 +94,7 @@ namespace WS980ToMqtt
             MqttClientConnectResult t = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
             MyLogger.Info("Sende MQTT an " + mqttServer);
             int loopCounter = 0;
+            int errorCounter = 0;
             do
             {
                 try
@@ -102,10 +103,20 @@ namespace WS980ToMqtt
                     now = DateTime.UtcNow;
 
                     if (!ws980.getData())
-                        MyLogger.ErrM("WS8´989ToMqtt.MainProcedure.Start; ws980.getData() liefert Fehler");
+                    {
+                        errorCounter++;
+                        if ((errorCounter % 4*15) == 0) // nur wenn mindestens 15 Minuten in Folge, dann per email warnen
+                        {
+                            MyLogger.ErrM("WS980ToMqtt.MainProcedure.Start; ws980.getData() liefert Fehler, zum {0} ten mal in Folge",errorCounter);
+                        }
+                        else
+                        {
+                            MyLogger.Err("WS980ToMqtt.MainProcedure.Start; ws980.getData() liefert Fehler, zum {0}ten mal in Folge",errorCounter);
+                        }
+                    }
                     else
                     {
-
+                        errorCounter = 0;
                         bool erg = PublishMqtt("Time", now.ToString("o"));
                         if (!erg)
                             MyLogger.Err("Exeption in PublishMqtt('Time',{0})", now.ToString("o"));

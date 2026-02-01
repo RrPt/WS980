@@ -15,7 +15,7 @@ namespace WS980ToMqtt
         /// </summary>
         static void Main(string[] args)
         {
-            MyLogger.Init("Ws980ToMqttService");
+            MyLogger.Init("Ws980ToMqttService",useFirstOccurenceListePara: false);
             MyLogger.LogLevel = 4;
             MyLogger.AddEmailToInform("R.Petzoldt@web.de");
             try
