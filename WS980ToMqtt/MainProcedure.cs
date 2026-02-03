@@ -139,7 +139,7 @@ namespace WS980ToMqtt
                         // zyklisch Mail senden wenn es einen Fehler gab
                         if (lastMeasureTime.Hour < now.Hour)
                         {
-                            MyLogger.Warn("Sammelemail senden");
+                            MyLogger.Debug("Sammelemail senden");
                             MyLogger.SendSammelEmail();
                             //MyLogger.Warn("Sammelemail ausgeblendet, da unnötig");
                             MyLogger.Info("{0} Schleifendurchläufe", loopCounter);
@@ -182,7 +182,7 @@ namespace WS980ToMqtt
             }
             catch (Exception ex)
             {
-                MyLogger.LogException("PublishMqtt",ex);
+                MyLogger.Err("PublishMqtt({0},{1}): {2} bei ",topic, payload,ex.Message);
                 return false;
             }
         }
