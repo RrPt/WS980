@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.4.33205.214
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WS980Test", "WS980Test\WS980Test.csproj", "{15656AEC-6804-4B8C-A3F7-C567D7F953C7}"
 EndProject
@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WS980", "WS980\WS980.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WS980ToMqtt", "WS980ToMqtt\WS980ToMqtt.csproj", "{7F3440AF-2569-4341-A42E-23E6551B8F0B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpTools", "..\RpTools\RpTools.csproj", "{22B1DE0B-2D82-445F-B016-F2F174C6A581}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpTools", "..\RpTools\RpTools\RpTools.csproj", "{33968902-215F-D265-7224-1032A0F12F36}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,12 +36,12 @@ Global
 		{7F3440AF-2569-4341-A42E-23E6551B8F0B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7F3440AF-2569-4341-A42E-23E6551B8F0B}.Remote|Any CPU.ActiveCfg = Remote|Any CPU
 		{7F3440AF-2569-4341-A42E-23E6551B8F0B}.Remote|Any CPU.Build.0 = Remote|Any CPU
-		{22B1DE0B-2D82-445F-B016-F2F174C6A581}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{22B1DE0B-2D82-445F-B016-F2F174C6A581}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{22B1DE0B-2D82-445F-B016-F2F174C6A581}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{22B1DE0B-2D82-445F-B016-F2F174C6A581}.Release|Any CPU.Build.0 = Release|Any CPU
-		{22B1DE0B-2D82-445F-B016-F2F174C6A581}.Remote|Any CPU.ActiveCfg = Remote|Any CPU
-		{22B1DE0B-2D82-445F-B016-F2F174C6A581}.Remote|Any CPU.Build.0 = Remote|Any CPU
+		{33968902-215F-D265-7224-1032A0F12F36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33968902-215F-D265-7224-1032A0F12F36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33968902-215F-D265-7224-1032A0F12F36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33968902-215F-D265-7224-1032A0F12F36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33968902-215F-D265-7224-1032A0F12F36}.Remote|Any CPU.ActiveCfg = Remote|Any CPU
+		{33968902-215F-D265-7224-1032A0F12F36}.Remote|Any CPU.Build.0 = Remote|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

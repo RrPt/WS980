@@ -13,15 +13,15 @@ namespace WS980ToMqtt
     internal class MainProcedure
     {
         public bool stopPending = false;
-        public TimeSpan WaitTime =  new TimeSpan(0,0,15);  // in h,min,s
+        //public TimeSpan WaitTime =  new TimeSpan(0,0,15);  // in h,min,s
         static DateTime lastMeasureTime = DateTime.UtcNow;
         static IMqttClient mqttClient;
         static MqttClientOptions mqttClientOptions;
-        String topicBase = "weatherstation/";
+        //String topicBase = "weatherstation/";
         DateTime now;
         DateTime waitUntilTime;
         WS980 ws980 = null;
-        String mqttServer = "192.168.22.101";
+        //String mqttServer = "192.168.22.101";
 
         internal void Start()
         {
@@ -31,6 +31,10 @@ namespace WS980ToMqtt
             MyLogger.Info("-------------------------------------------------------------------------------------");
             MyLogger.Info("  ws980ToMqttService wurde gestartet. " + Version);
             MyLogger.Info("-------------------------------------------------------------------------------------");
+
+            GenericConfig<Config>.importConfig();
+            //GenericConfig<Config>.GenericInstance.exportConfig();   // nur zur Initialisierung
+
 
 
             var WS980List = WS980.RequestAllStations();
@@ -63,8 +67,8 @@ namespace WS980ToMqtt
             var mqttFactory = new MqttFactory();
             mqttClient = mqttFactory.CreateMqttClient();
             mqttClientOptions = new MqttClientOptionsBuilder()
-                .WithTcpServer(mqttServer)
-                .WithCredentials("hv", "Mqtt4hv")
+                .WithTcpServer(Config.Instance.Mqtt_Broker)
+                .WithCredentials(Config.Instance.Mqtt_User, Config.Instance.Mqtt_password.Decrypted)
                 .Build();
 
             mqttClient.ConnectedAsync += async e =>
@@ -92,7 +96,7 @@ namespace WS980ToMqtt
             };
 
             MqttClientConnectResult t = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
-            MyLogger.Info("Sende MQTT an " + mqttServer);
+            MyLogger.Info("Sende MQTT an " + Config.Instance.Mqtt_Broker);
             int loopCounter = 0;
             int errorCounter = 0;
             do
@@ -157,11 +161,12 @@ namespace WS980ToMqtt
                     {
                         MyLogger.LogException("inner exception",eX);
                         MqttClientConnectResult erg = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
-                        MyLogger.Info("Versuch MQTT reconnect zu {0} : {1}",  mqttServer,erg?.ReasonString);
+                        MyLogger.Info("Versuch MQTT reconnect zu {0} : {1}", Config.Instance.Mqtt_Broker, erg?.ReasonString);
                     }
                 }
                 finally
                 {
+                    TimeSpan WaitTime = new TimeSpan(0, 0, Config.Instance.IntervalInSeconds);
                     waitUntilTime = new DateTime((now.Ticks + WaitTime.Ticks  - 1) / WaitTime.Ticks * WaitTime.Ticks, DateTimeKind.Utc);
                     while (DateTime.UtcNow < waitUntilTime)
                     {
@@ -176,7 +181,7 @@ namespace WS980ToMqtt
         {
             try
             {
-                var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(topicBase + topic).WithPayload(payload).Build();
+                var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(Config.Instance.Mqtt_TopicBase + topic).WithPayload(payload).Build();
                 mqttClient.PublishAsync(applicationMessage, CancellationToken.None).GetAwaiter().GetResult();
                 return true;
             }
