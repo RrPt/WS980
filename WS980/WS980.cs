@@ -441,7 +441,7 @@ namespace WS980_NS
                 int befCode = receiveBytes[5];
                 if (befCode != (int)valueType)
                 {
-                    MyLogger.ErrM("getValues: Empfangene Daten (Typ={0}) entsprechen nicht den angeforderten (Typ={1})", (ValueType)befCode, valueType);
+                    MyLogger.Err("getValues: Empfangene Daten (Typ={0}) entsprechen nicht den angeforderten (Typ={1})", (ValueType)befCode, valueType);
                     return false;
                 }
                 int idx = 6;

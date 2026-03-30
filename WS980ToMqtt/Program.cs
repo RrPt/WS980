@@ -31,6 +31,7 @@ namespace WS980ToMqtt
                     Console.WriteLine("\t\t|                     (c) RrPt |");
                     Console.WriteLine("\t\t+------------------------------+");
                     MyLogger.Info("Debugmodus (kein Service)");
+                    //MyLogger.SendMail("Test von WS...1", "mailinhalt", "R.Petzoldt@web.de");
                     mp.Start();
                 }
                 else

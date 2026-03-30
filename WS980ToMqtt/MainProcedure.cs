@@ -109,13 +109,13 @@ namespace WS980ToMqtt
                     if (!ws980.getData())
                     {
                         errorCounter++;
-                        if ((errorCounter % 4*15) == 0) // nur wenn mindestens 15 Minuten in Folge, dann per email warnen
+                        if ((errorCounter % (4*15)) == 0) // nur wenn mindestens 15 Minuten in Folge, dann per email warnen
                         {
-                            MyLogger.ErrM("WS980ToMqtt.MainProcedure.Start; ws980.getData() liefert Fehler, zum {0} ten mal in Folge",errorCounter);
+                            MyLogger.Err("WS980ToMqtt.MainProcedure.Start; ws980.getData() liefert Fehler, zum {0} ten mal in Folge M",errorCounter);
                         }
                         else
                         {
-                            MyLogger.Err("WS980ToMqtt.MainProcedure.Start; ws980.getData() liefert Fehler, zum {0}ten mal in Folge",errorCounter);
+                            MyLogger.Err("WS980ToMqtt.MainProcedure.Start; ws980.getData() liefert Fehler, zum {0} ten mal in Folge",errorCounter);
                         }
                     }
                     else
@@ -143,7 +143,7 @@ namespace WS980ToMqtt
                         // zyklisch Mail senden wenn es einen Fehler gab
                         if (lastMeasureTime.Hour < now.Hour)
                         {
-                            MyLogger.Debug("Sammelemail senden");
+                            MyLogger.Info("Sammelemail senden");
                             MyLogger.SendSammelEmail();
                             //MyLogger.Warn("Sammelemail ausgeblendet, da unnötig");
                             MyLogger.Info("{0} Schleifendurchläufe", loopCounter);
