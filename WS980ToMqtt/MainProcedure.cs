@@ -39,18 +39,17 @@ namespace WS980ToMqtt
 
             var WS980List = WS980.RequestAllStations();
 
-            if (WS980List.Count < 1)
+            while (WS980List.Count < 1)
             {
-                MyLogger.Err("keine Wetterstation gefunden");
+                MyLogger.Err("keine Wetterstation gefunden, nächster Versuch in 60s");
+                Thread.Sleep(60000);
+                WS980List = WS980.RequestAllStations();
             }
-            else
+            MyLogger.Info("Folgende Wetterstationen gefunden:");
+            int i = 1;
+            foreach (var item in WS980List)
             {
-                MyLogger.Info("Folgende Wetterstationen gefunden:");
-                int i = 1;
-                foreach (var item in WS980List)
-                {
-                    MyLogger.Info("  {0}. {1}",i,item.ToString());
-                }
+                MyLogger.Info("  {0}. {1}", i++, item.ToString());
             }
             ws980 = new WS980(WS980List[0]);
             MyLogger.Info("1. Wetterstation ausgewählt");
@@ -79,23 +78,43 @@ namespace WS980ToMqtt
             mqttClient.DisconnectedAsync += async e =>
             {
                 MyLogger.Err("MQTT disconnected: " + e.ReasonString);
-
-                // Warte kurz, damit wir nicht in eine Reconnect-Schleife rasen
-                await Task.Delay(TimeSpan.FromSeconds(5));
-
-                try
+                int delaySeconds = 5;
+                while (!stopPending)
                 {
-                    MyLogger.Info("Trying MQTT reconnect...");
-                    await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
-                    MyLogger.Info("MQTT reconnect successful.");
-                }
-                catch (Exception ex)
-                {
-                    MyLogger.Err("MQTT reconnect failed: " + ex.Message);
+                    await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
+                    try
+                    {
+                        MyLogger.Info("Trying MQTT reconnect...");
+                        await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+                        MyLogger.Info("MQTT reconnect successful.");
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        MyLogger.Err("MQTT reconnect failed: " + ex.Message);
+                        delaySeconds = Math.Min(delaySeconds * 2, 60);
+                    }
                 }
             };
 
-            MqttClientConnectResult t = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
+            {
+                int delaySeconds = 5;
+                bool connected = false;
+                while (!connected)
+                {
+                    try
+                    {
+                        mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
+                        connected = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        MyLogger.Err("MQTT Verbindung zu {0} fehlgeschlagen: {1}, nächster Versuch in {2}s", Config.Instance.Mqtt_Broker, ex.Message, delaySeconds);
+                        Thread.Sleep(delaySeconds * 1000);
+                        delaySeconds = Math.Min(delaySeconds * 2, 60);
+                    }
+                }
+            }
             MyLogger.Info("Sende MQTT an " + Config.Instance.Mqtt_Broker);
             int loopCounter = 0;
             int errorCounter = 0;
@@ -158,10 +177,18 @@ namespace WS980ToMqtt
                     MyLogger.CriticalM("Ws980ToMqttService befindet sich in einem undefinierten Zustand.");
                     MyLogger.LogException("Start() in Do-loop", eX);
                     if (eX.InnerException != null)
+                        MyLogger.LogException("inner exception", eX);
+                    try
                     {
-                        MyLogger.LogException("inner exception",eX);
-                        MqttClientConnectResult erg = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
-                        MyLogger.Info("Versuch MQTT reconnect zu {0} : {1}", Config.Instance.Mqtt_Broker, erg?.ReasonString);
+                        if (!mqttClient.IsConnected)
+                        {
+                            MqttClientConnectResult erg = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
+                            MyLogger.Info("Versuch MQTT reconnect zu {0} : {1}", Config.Instance.Mqtt_Broker, erg?.ReasonString);
+                        }
+                    }
+                    catch (Exception reconnEx)
+                    {
+                        MyLogger.Err("MQTT reconnect nach Fehler fehlgeschlagen: " + reconnEx.Message);
                     }
                 }
                 finally
@@ -181,13 +208,18 @@ namespace WS980ToMqtt
         {
             try
             {
+                if (!mqttClient.IsConnected)
+                {
+                    MyLogger.Err("PublishMqtt: MQTT nicht verbunden, versuche Reconnect...");
+                    mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
+                }
                 var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(Config.Instance.Mqtt_TopicBase + topic).WithPayload(payload).Build();
                 mqttClient.PublishAsync(applicationMessage, CancellationToken.None).GetAwaiter().GetResult();
                 return true;
             }
             catch (Exception ex)
             {
-                MyLogger.Err("PublishMqtt({0},{1}): {2} bei ",topic, payload,ex.Message);
+                MyLogger.Err("PublishMqtt({0},{1}): {2}", topic, payload, ex.Message);
                 return false;
             }
         }
