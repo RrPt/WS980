@@ -68,6 +68,7 @@ namespace WS980ToMqtt
             mqttClientOptions = new MqttClientOptionsBuilder()
                 .WithTcpServer(Config.Instance.Mqtt_Broker)
                 .WithCredentials(Config.Instance.Mqtt_User, Config.Instance.Mqtt_password.Decrypted)
+                .WithKeepAlivePeriod(TimeSpan.FromSeconds(30))
                 .Build();
 
             mqttClient.ConnectedAsync += async e =>
@@ -178,18 +179,6 @@ namespace WS980ToMqtt
                     MyLogger.LogException("Start() in Do-loop", eX);
                     if (eX.InnerException != null)
                         MyLogger.LogException("inner exception", eX);
-                    try
-                    {
-                        if (!mqttClient.IsConnected)
-                        {
-                            MqttClientConnectResult erg = mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
-                            MyLogger.Info("Versuch MQTT reconnect zu {0} : {1}", Config.Instance.Mqtt_Broker, erg?.ReasonString);
-                        }
-                    }
-                    catch (Exception reconnEx)
-                    {
-                        MyLogger.Err("MQTT reconnect nach Fehler fehlgeschlagen: " + reconnEx.Message);
-                    }
                 }
                 finally
                 {
@@ -210,8 +199,8 @@ namespace WS980ToMqtt
             {
                 if (!mqttClient.IsConnected)
                 {
-                    MyLogger.Err("PublishMqtt: MQTT nicht verbunden, versuche Reconnect...");
-                    mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None).GetAwaiter().GetResult();
+                    MyLogger.Err("PublishMqtt: MQTT nicht verbunden, Reconnect läuft über DisconnectedAsync.");
+                    return false;
                 }
                 var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(Config.Instance.Mqtt_TopicBase + topic).WithPayload(payload).Build();
                 mqttClient.PublishAsync(applicationMessage, CancellationToken.None).GetAwaiter().GetResult();
