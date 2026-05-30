@@ -17,6 +17,7 @@ namespace WS980ToMqtt
         static DateTime lastMeasureTime = DateTime.UtcNow;
         static IMqttClient mqttClient;
         static MqttClientOptions mqttClientOptions;
+        static readonly SemaphoreSlim _reconnectLock = new SemaphoreSlim(1, 1);
         //String topicBase = "weatherstation/";
         DateTime now;
         DateTime waitUntilTime;
@@ -78,23 +79,36 @@ namespace WS980ToMqtt
 
             mqttClient.DisconnectedAsync += async e =>
             {
-                MyLogger.Err("MQTT disconnected: " + e.ReasonString);
-                int delaySeconds = 5;
-                while (!stopPending)
+                if (mqttClient.IsConnected)
+                    return;
+                if (!await _reconnectLock.WaitAsync(0))
+                    return;
+                try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
-                    try
+                    MyLogger.Err("MQTT disconnected: " + e.ReasonString);
+                    int delaySeconds = 5;
+                    while (!stopPending)
                     {
-                        MyLogger.Info("Trying MQTT reconnect...");
-                        await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
-                        MyLogger.Info("MQTT reconnect successful.");
-                        return;
+                        await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
+                        if (mqttClient.IsConnected)
+                            return;
+                        try
+                        {
+                            MyLogger.Info("Trying MQTT reconnect...");
+                            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+                            MyLogger.Info("MQTT reconnect successful.");
+                            return;
+                        }
+                        catch (Exception ex)
+                        {
+                            MyLogger.Err("MQTT reconnect failed: " + ex.Message);
+                            delaySeconds = Math.Min(delaySeconds * 2, 60);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        MyLogger.Err("MQTT reconnect failed: " + ex.Message);
-                        delaySeconds = Math.Min(delaySeconds * 2, 60);
-                    }
+                }
+                finally
+                {
+                    _reconnectLock.Release();
                 }
             };
 
